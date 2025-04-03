@@ -3,7 +3,7 @@
 {% block content %}
 <div class="row mb-4">
     <div class="col">
-        <h2 class="border-bottom pb-2"><i class="fas fa-tachometer-alt me-2"></i>Dashboard</h2>
+        <h2 class="border-bottom pb-2"><i class="fas fa-tachometer-alt me-2"></i>Painel de Controle</h2>
     </div>
 </div>
 
@@ -12,7 +12,7 @@
     <div class="col-lg-6 mb-4">
         <div class="card h-100 shadow">
             <div class="card-header bg-primary text-white">
-                <h5 class="mb-0"><i class="fas fa-calendar-alt me-2"></i>Upcoming Maintenance</h5>
+                <h5 class="mb-0"><i class="fas fa-calendar-alt me-2"></i>Manutenções Próximas</h5>
             </div>
             <div class="card-body">
                 {% if upcoming_maintenance %}
@@ -20,16 +20,16 @@
                         <table class="table table-striped table-hover">
                             <thead>
                                 <tr>
-                                    <th>Date</th>
-                                    <th>Equipment</th>
-                                    <th>Plan</th>
-                                    <th>Action</th>
+                                    <th>Data</th>
+                                    <th>Equipamento</th>
+                                    <th>Plano</th>
+                                    <th>Ação</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 {% for schedule in upcoming_maintenance %}
                                     <tr>
-                                        <td>{{ schedule.scheduled_date.strftime('%Y-%m-%d %H:%M') }}</td>
+                                        <td>{{ schedule.scheduled_date.strftime('%d/%m/%Y %H:%M') }}</td>
                                         <td>{{ schedule.equipment.identification_number }} ({{ schedule.equipment.model }})</td>
                                         <td>{{ schedule.maintenance_plan.name }}</td>
                                         <td>
@@ -49,12 +49,12 @@
                     </div>
                 {% else %}
                     <div class="alert alert-info">
-                        No upcoming maintenance scheduled for the next 7 days.
+                        Nenhuma manutenção agendada para os próximos 7 dias.
                     </div>
                 {% endif %}
             </div>
             <div class="card-footer text-end">
-                <a href="{{ url_for('maintenance.schedule_list') }}" class="btn btn-outline-primary btn-sm">View All</a>
+                <a href="{{ url_for('maintenance.schedule_list') }}" class="btn btn-outline-primary btn-sm">Ver Todas</a>
             </div>
         </div>
     </div>
@@ -63,7 +63,7 @@
     <div class="col-lg-6 mb-4">
         <div class="card h-100 shadow">
             <div class="card-header bg-success text-white">
-                <h5 class="mb-0"><i class="fas fa-history me-2"></i>Recent Maintenance Records</h5>
+                <h5 class="mb-0"><i class="fas fa-history me-2"></i>Registros Recentes de Manutenção</h5>
             </div>
             <div class="card-body">
                 {% if recent_records %}
@@ -71,20 +71,20 @@
                         <table class="table table-striped table-hover">
                             <thead>
                                 <tr>
-                                    <th>Date</th>
-                                    <th>Equipment</th>
+                                    <th>Data</th>
+                                    <th>Equipamento</th>
                                     <th>Status</th>
-                                    <th>View</th>
+                                    <th>Ver</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 {% for record in recent_records %}
                                     <tr>
-                                        <td>{{ record.start_time.strftime('%Y-%m-%d') }}</td>
+                                        <td>{{ record.start_time.strftime('%d/%m/%Y') }}</td>
                                         <td>{{ record.equipment.identification_number }}</td>
                                         <td>
                                             <span class="badge bg-{{ 'success' if record.status == 'completed' else 'warning' }}">
-                                                {{ record.status }}
+                                                {% if record.status == 'completed' %}Concluído{% else %}Em andamento{% endif %}
                                             </span>
                                         </td>
                                         <td>
@@ -99,12 +99,12 @@
                     </div>
                 {% else %}
                     <div class="alert alert-info">
-                        No maintenance records found.
+                        Nenhum registro de manutenção encontrado.
                     </div>
                 {% endif %}
             </div>
             <div class="card-footer text-end">
-                <a href="{{ url_for('maintenance.records') }}" class="btn btn-outline-success btn-sm">View All</a>
+                <a href="{{ url_for('maintenance.records') }}" class="btn btn-outline-success btn-sm">Ver Todos</a>
             </div>
         </div>
     </div>
@@ -115,7 +115,7 @@
     <div class="col-lg-6 mb-4">
         <div class="card h-100 shadow">
             <div class="card-header bg-info text-white">
-                <h5 class="mb-0"><i class="fas fa-bell me-2"></i>Notifications</h5>
+                <h5 class="mb-0"><i class="fas fa-bell me-2"></i>Notificações</h5>
             </div>
             <div class="card-body">
                 {% if notifications %}
@@ -124,15 +124,15 @@
                             <div class="list-group-item list-group-item-action">
                                 <div class="d-flex w-100 justify-content-between">
                                     <h6 class="mb-1">{{ notification.title }}</h6>
-                                    <small>{{ notification.created_at.strftime('%Y-%m-%d %H:%M') }}</small>
+                                    <small>{{ notification.created_at.strftime('%d/%m/%Y %H:%M') }}</small>
                                 </div>
                                 <p class="mb-1">{{ notification.message }}</p>
                                 <div class="d-flex justify-content-end mt-1">
                                     {% if notification.schedule_id %}
-                                        <a href="{{ url_for('maintenance.view_schedule', schedule_id=notification.schedule_id) }}" class="btn btn-sm btn-outline-primary me-2">View</a>
+                                        <a href="{{ url_for('maintenance.view_schedule', schedule_id=notification.schedule_id) }}" class="btn btn-sm btn-outline-primary me-2">Ver</a>
                                     {% endif %}
                                     <form action="{{ url_for('maintenance.mark_notification_read', notification_id=notification.id) }}" method="post">
-                                        <button type="submit" class="btn btn-sm btn-outline-secondary">Mark Read</button>
+                                        <button type="submit" class="btn btn-sm btn-outline-secondary">Marcar como Lida</button>
                                     </form>
                                 </div>
                             </div>
@@ -140,12 +140,12 @@
                     </div>
                 {% else %}
                     <div class="alert alert-info">
-                        No unread notifications.
+                        Nenhuma notificação não lida.
                     </div>
                 {% endif %}
             </div>
             <div class="card-footer text-end">
-                <a href="{{ url_for('maintenance.notifications') }}" class="btn btn-outline-info btn-sm">View All</a>
+                <a href="{{ url_for('maintenance.notifications') }}" class="btn btn-outline-info btn-sm">Ver Todas</a>
             </div>
         </div>
     </div>
@@ -154,7 +154,7 @@
     <div class="col-lg-6 mb-4">
         <div class="card h-100 shadow">
             <div class="card-header bg-dark text-white">
-                <h5 class="mb-0"><i class="fas fa-bolt me-2"></i>Quick Actions</h5>
+                <h5 class="mb-0"><i class="fas fa-bolt me-2"></i>Ações Rápidas</h5>
             </div>
             <div class="card-body">
                 <div class="row row-cols-1 row-cols-md-2 g-4">
@@ -164,7 +164,7 @@
                             <div class="card text-center h-100">
                                 <div class="card-body">
                                     <i class="fas fa-air-conditioner fa-3x mb-3"></i>
-                                    <h5 class="card-title">Add Equipment</h5>
+                                    <h5 class="card-title">Adicionar Equipamento</h5>
                                 </div>
                             </div>
                         </a>
@@ -174,7 +174,7 @@
                             <div class="card text-center h-100">
                                 <div class="card-body">
                                     <i class="fas fa-tools fa-3x mb-3"></i>
-                                    <h5 class="card-title">Create Plan</h5>
+                                    <h5 class="card-title">Criar Plano</h5>
                                 </div>
                             </div>
                         </a>
@@ -184,7 +184,7 @@
                             <div class="card text-center h-100">
                                 <div class="card-body">
                                     <i class="fas fa-calendar-plus fa-3x mb-3"></i>
-                                    <h5 class="card-title">Schedule Maintenance</h5>
+                                    <h5 class="card-title">Agendar Manutenção</h5>
                                 </div>
                             </div>
                         </a>
@@ -194,7 +194,7 @@
                             <div class="card text-center h-100">
                                 <div class="card-body">
                                     <i class="fas fa-chart-line fa-3x mb-3"></i>
-                                    <h5 class="card-title">View Reports</h5>
+                                    <h5 class="card-title">Ver Relatórios</h5>
                                 </div>
                             </div>
                         </a>
@@ -205,7 +205,7 @@
                             <div class="card text-center h-100">
                                 <div class="card-body">
                                     <i class="fas fa-calendar-check fa-3x mb-3"></i>
-                                    <h5 class="card-title">My Schedules</h5>
+                                    <h5 class="card-title">Meus Agendamentos</h5>
                                 </div>
                             </div>
                         </a>
@@ -215,7 +215,7 @@
                             <div class="card text-center h-100">
                                 <div class="card-body">
                                     <i class="fas fa-clipboard-check fa-3x mb-3"></i>
-                                    <h5 class="card-title">My Records</h5>
+                                    <h5 class="card-title">Meus Registros</h5>
                                 </div>
                             </div>
                         </a>
@@ -225,7 +225,7 @@
                             <div class="card text-center h-100">
                                 <div class="card-body">
                                     <i class="fas fa-bell fa-3x mb-3"></i>
-                                    <h5 class="card-title">All Notifications</h5>
+                                    <h5 class="card-title">Todas Notificações</h5>
                                 </div>
                             </div>
                         </a>
@@ -235,7 +235,7 @@
                             <div class="card text-center h-100">
                                 <div class="card-body">
                                     <i class="fas fa-snowflake fa-3x mb-3"></i>
-                                    <h5 class="card-title">View Equipment</h5>
+                                    <h5 class="card-title">Ver Equipamentos</h5>
                                 </div>
                             </div>
                         </a>
