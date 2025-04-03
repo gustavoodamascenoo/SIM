@@ -1,0 +1,233 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col">
+        <div class="d-flex justify-content-between align-items-center">
+            <h2 class="border-bottom pb-2"><i class="fas fa-calendar-alt me-2"></i>Scheduled Maintenance</h2>
+            {% if current_user.is_admin() or current_user.is_supervisor() %}
+            <a href="{{ url_for('maintenance.add_schedule') }}" class="btn btn-primary">
+                <i class="fas fa-plus me-2"></i>Schedule New Maintenance
+            </a>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+{% if schedules %}
+<div class="card shadow mb-4">
+    <div class="card-header bg-primary text-white">
+        <h5 class="mb-0"><i class="fas fa-list me-2"></i>Scheduled Maintenance</h5>
+    </div>
+    <div class="card-body">
+        <ul class="nav nav-tabs mb-3" id="scheduleTabs" role="tablist">
+            <li class="nav-item" role="presentation">
+                <button class="nav-link active" id="upcoming-tab" data-bs-toggle="tab" data-bs-target="#upcoming" type="button" role="tab" aria-controls="upcoming" aria-selected="true">Upcoming</button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="completed-tab" data-bs-toggle="tab" data-bs-target="#completed" type="button" role="tab" aria-controls="completed" aria-selected="false">Completed</button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="all-tab" data-bs-toggle="tab" data-bs-target="#all" type="button" role="tab" aria-controls="all" aria-selected="false">All</button>
+            </li>
+        </ul>
+        
+        <div class="tab-content" id="scheduleTabsContent">
+            <div class="tab-pane fade show active" id="upcoming" role="tabpanel" aria-labelledby="upcoming-tab">
+                <div class="table-responsive">
+                    <table class="table table-striped table-hover">
+                        <thead>
+                            <tr>
+                                <th>Scheduled Date</th>
+                                <th>Equipment</th>
+                                <th>Location</th>
+                                <th>Maintenance Plan</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% set upcoming_schedules = schedules|selectattr('status', 'equalto', 'scheduled')|list %}
+                            {% if upcoming_schedules %}
+                                {% for schedule in upcoming_schedules|sort(attribute='scheduled_date') %}
+                                <tr>
+                                    <td>{{ schedule.scheduled_date|format_datetime }}</td>
+                                    <td>{{ schedule.equipment.identification_number }} ({{ schedule.equipment.model }})</td>
+                                    <td>{{ schedule.equipment.location_building }}, Floor {{ schedule.equipment.location_floor }}</td>
+                                    <td>{{ schedule.maintenance_plan.name }}</td>
+                                    <td>
+                                        <span class="badge bg-warning">{{ schedule.status }}</span>
+                                    </td>
+                                    <td>
+                                        <div class="btn-group" role="group">
+                                            <a href="{{ url_for('maintenance.view_schedule', schedule_id=schedule.id) }}" class="btn btn-sm btn-info" title="View">
+                                                <i class="fas fa-eye"></i>
+                                            </a>
+                                            {% if current_user.is_technician() %}
+                                            <a href="{{ url_for('maintenance.perform_maintenance', schedule_id=schedule.id) }}" class="btn btn-sm btn-success" title="Perform Maintenance">
+                                                <i class="fas fa-wrench"></i>
+                                            </a>
+                                            {% endif %}
+                                            {% if current_user.is_admin() or current_user.is_supervisor() %}
+                                            <a href="{{ url_for('maintenance.edit_schedule', schedule_id=schedule.id) }}" class="btn btn-sm btn-warning" title="Edit">
+                                                <i class="fas fa-edit"></i>
+                                            </a>
+                                            {% endif %}
+                                            {% if current_user.is_admin() %}
+                                            <button type="button" class="btn btn-sm btn-danger" title="Delete" data-bs-toggle="modal" data-bs-target="#deleteModal{{ schedule.id }}">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
+                                            
+                                            <!-- Delete Modal -->
+                                            <div class="modal fade" id="deleteModal{{ schedule.id }}" tabindex="-1" aria-labelledby="deleteModalLabel{{ schedule.id }}" aria-hidden="true">
+                                                <div class="modal-dialog">
+                                                    <div class="modal-content">
+                                                        <div class="modal-header bg-danger text-white">
+                                                            <h5 class="modal-title" id="deleteModalLabel{{ schedule.id }}">Confirm Deletion</h5>
+                                                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                                        </div>
+                                                        <div class="modal-body">
+                                                            Are you sure you want to delete this scheduled maintenance?
+                                                            <br><br>
+                                                            <div class="alert alert-warning">
+                                                                <i class="fas fa-exclamation-triangle me-2"></i>This action cannot be undone. All notifications related to this schedule will also be deleted.
+                                                            </div>
+                                                        </div>
+                                                        <div class="modal-footer">
+                                                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                                            <form action="{{ url_for('maintenance.delete_schedule', schedule_id=schedule.id) }}" method="post">
+                                                                <button type="submit" class="btn btn-danger">Delete</button>
+                                                            </form>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            {% endif %}
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            {% else %}
+                                <tr>
+                                    <td colspan="6" class="text-center">No upcoming scheduled maintenance.</td>
+                                </tr>
+                            {% endif %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            
+            <div class="tab-pane fade" id="completed" role="tabpanel" aria-labelledby="completed-tab">
+                <div class="table-responsive">
+                    <table class="table table-striped table-hover">
+                        <thead>
+                            <tr>
+                                <th>Scheduled Date</th>
+                                <th>Equipment</th>
+                                <th>Location</th>
+                                <th>Maintenance Plan</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% set completed_schedules = schedules|selectattr('status', 'equalto', 'completed')|list %}
+                            {% if completed_schedules %}
+                                {% for schedule in completed_schedules|sort(attribute='scheduled_date', reverse=true) %}
+                                <tr>
+                                    <td>{{ schedule.scheduled_date|format_datetime }}</td>
+                                    <td>{{ schedule.equipment.identification_number }} ({{ schedule.equipment.model }})</td>
+                                    <td>{{ schedule.equipment.location_building }}, Floor {{ schedule.equipment.location_floor }}</td>
+                                    <td>{{ schedule.maintenance_plan.name }}</td>
+                                    <td>
+                                        <span class="badge bg-success">{{ schedule.status }}</span>
+                                    </td>
+                                    <td>
+                                        <div class="btn-group" role="group">
+                                            <a href="{{ url_for('maintenance.view_schedule', schedule_id=schedule.id) }}" class="btn btn-sm btn-info" title="View">
+                                                <i class="fas fa-eye"></i>
+                                            </a>
+                                            {% if schedule.maintenance_record %}
+                                            <a href="{{ url_for('maintenance.view_record', record_id=schedule.maintenance_record.id) }}" class="btn btn-sm btn-primary" title="View Record">
+                                                <i class="fas fa-clipboard-check"></i>
+                                            </a>
+                                            {% endif %}
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            {% else %}
+                                <tr>
+                                    <td colspan="6" class="text-center">No completed maintenance.</td>
+                                </tr>
+                            {% endif %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            
+            <div class="tab-pane fade" id="all" role="tabpanel" aria-labelledby="all-tab">
+                <div class="table-responsive">
+                    <table class="table table-striped table-hover">
+                        <thead>
+                            <tr>
+                                <th>Scheduled Date</th>
+                                <th>Equipment</th>
+                                <th>Location</th>
+                                <th>Maintenance Plan</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for schedule in schedules|sort(attribute='scheduled_date', reverse=true) %}
+                            <tr>
+                                <td>{{ schedule.scheduled_date|format_datetime }}</td>
+                                <td>{{ schedule.equipment.identification_number }} ({{ schedule.equipment.model }})</td>
+                                <td>{{ schedule.equipment.location_building }}, Floor {{ schedule.equipment.location_floor }}</td>
+                                <td>{{ schedule.maintenance_plan.name }}</td>
+                                <td>
+                                    <span class="badge bg-{{ 'success' if schedule.status == 'completed' else ('warning' if schedule.status == 'scheduled' else 'secondary') }}">
+                                        {{ schedule.status }}
+                                    </span>
+                                </td>
+                                <td>
+                                    <div class="btn-group" role="group">
+                                        <a href="{{ url_for('maintenance.view_schedule', schedule_id=schedule.id) }}" class="btn btn-sm btn-info" title="View">
+                                            <i class="fas fa-eye"></i>
+                                        </a>
+                                        {% if schedule.status == 'scheduled' and current_user.is_technician() %}
+                                        <a href="{{ url_for('maintenance.perform_maintenance', schedule_id=schedule.id) }}" class="btn btn-sm btn-success" title="Perform Maintenance">
+                                            <i class="fas fa-wrench"></i>
+                                        </a>
+                                        {% endif %}
+                                        {% if schedule.status == 'scheduled' and (current_user.is_admin() or current_user.is_supervisor()) %}
+                                        <a href="{{ url_for('maintenance.edit_schedule', schedule_id=schedule.id) }}" class="btn btn-sm btn-warning" title="Edit">
+                                            <i class="fas fa-edit"></i>
+                                        </a>
+                                        {% endif %}
+                                        {% if schedule.maintenance_record %}
+                                        <a href="{{ url_for('maintenance.view_record', record_id=schedule.maintenance_record.id) }}" class="btn btn-sm btn-primary" title="View Record">
+                                            <i class="fas fa-clipboard-check"></i>
+                                        </a>
+                                        {% endif %}
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% else %}
+<div class="alert alert-info" role="alert">
+    <i class="fas fa-info-circle me-2"></i>No maintenance schedules found.
+    {% if current_user.is_admin() or current_user.is_supervisor() %}
+    <a href="{{ url_for('maintenance.add_schedule') }}" class="alert-link">Schedule your first maintenance</a>.
+    {% endif %}
+</div>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,170 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col">
+        <div class="d-flex justify-content-between align-items-center">
+            <h2 class="border-bottom pb-2"><i class="fas fa-history me-2"></i>Maintenance History</h2>
+            <a href="{{ url_for('reports.index') }}" class="btn btn-secondary">
+                <i class="fas fa-arrow-left me-1"></i>Back to Reports
+            </a>
+        </div>
+    </div>
+</div>
+
+<div class="row mb-4">
+    <div class="col">
+        <div class="card shadow">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0"><i class="fas fa-filter me-2"></i>Filter Options</h5>
+            </div>
+            <div class="card-body">
+                <form method="POST" action="{{ url_for('reports.maintenance_history') }}">
+                    {{ form.hidden_tag() }}
+                    
+                    <div class="row">
+                        <div class="col-md-3 mb-3">
+                            <label for="{{ form.start_date.id }}" class="form-label">Start Date</label>
+                            {{ form.start_date(class="form-control", type="date", value=start_date.strftime('%Y-%m-%d')) }}
+                            {% if form.start_date.errors %}
+                                {% for error in form.start_date.errors %}
+                                    <div class="text-danger">{{ error }}</div>
+                                {% endfor %}
+                            {% endif %}
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <label for="{{ form.end_date.id }}" class="form-label">End Date</label>
+                            {{ form.end_date(class="form-control", type="date", value=end_date.strftime('%Y-%m-%d')) }}
+                            {% if form.end_date.errors %}
+                                {% for error in form.end_date.errors %}
+                                    <div class="text-danger">{{ error }}</div>
+                                {% endfor %}
+                            {% endif %}
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <label for="{{ form.equipment_id.id }}" class="form-label">Equipment</label>
+                            {{ form.equipment_id(class="form-select") }}
+                            {% if form.equipment_id.errors %}
+                                {% for error in form.equipment_id.errors %}
+                                    <div class="text-danger">{{ error }}</div>
+                                {% endfor %}
+                            {% endif %}
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <label for="{{ form.technician_id.id }}" class="form-label">Technician</label>
+                            {{ form.technician_id(class="form-select") }}
+                            {% if form.technician_id.errors %}
+                                {% for error in form.technician_id.errors %}
+                                    <div class="text-danger">{{ error }}</div>
+                                {% endfor %}
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-3 mb-3">
+                            <label for="{{ form.status.id }}" class="form-label">Status</label>
+                            {{ form.status(class="form-select") }}
+                            {% if form.status.errors %}
+                                {% for error in form.status.errors %}
+                                    <div class="text-danger">{{ error }}</div>
+                                {% endfor %}
+                            {% endif %}
+                        </div>
+                        <div class="col-md-9 d-flex align-items-end mb-3">
+                            {{ form.submit(class="btn btn-primary") }}
+                            <a href="{{ url_for('reports.export') }}?report_type=maintenance_history&start_date={{ start_date.strftime('%Y-%m-%d') }}&end_date={{ end_date.strftime('%Y-%m-%d') }}" class="btn btn-success ms-2">
+                                <i class="fas fa-file-csv me-1"></i>Export to CSV
+                            </a>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col">
+        <div class="card shadow">
+            <div class="card-header bg-success text-white d-flex justify-content-between align-items-center">
+                <h5 class="mb-0"><i class="fas fa-list me-2"></i>Maintenance Records</h5>
+                <span>{{ start_date.strftime('%Y-%m-%d') }} to {{ end_date.strftime('%Y-%m-%d') }}</span>
+            </div>
+            <div class="card-body">
+                {% if records %}
+                    <div class="table-responsive">
+                        <table class="table table-striped table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Equipment</th>
+                                    <th>Location</th>
+                                    <th>Technician</th>
+                                    <th>Duration</th>
+                                    <th>Status</th>
+                                    <th>Issues</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for record in records %}
+                                <tr>
+                                    <td>{{ record.start_time|format_date }}</td>
+                                    <td>
+                                        <a href="{{ url_for('equipment.view', equipment_id=record.equipment.id) }}">
+                                            {{ record.equipment.identification_number }}
+                                        </a>
+                                    </td>
+                                    <td>{{ record.equipment.location_building }}, Floor {{ record.equipment.location_floor }}</td>
+                                    <td>{{ record.technician.first_name }} {{ record.technician.last_name }}</td>
+                                    <td>
+                                        {% if record.end_time %}
+                                            {{ ((record.end_time - record.start_time).total_seconds() / 3600)|round(1) }} hrs
+                                        {% else %}
+                                            In progress
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-{{ 'success' if record.status == 'completed' else 'warning' }}">
+                                            {{ record.status }}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        {% if record.issues_found %}
+                                            <span class="badge bg-danger">Issues Found</span>
+                                        {% else %}
+                                            <span class="badge bg-success">No Issues</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <a href="{{ url_for('maintenance.view_record', record_id=record.id) }}" class="btn btn-sm btn-info">
+                                            <i class="fas fa-eye"></i>
+                                        </a>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle me-2"></i>No maintenance records found for the selected criteria.
+                    </div>
+                {% endif %}
+            </div>
+            <div class="card-footer">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <strong>Total Records:</strong> {{ records|length }}
+                    </div>
+                    <div>
+                        <strong>Completed:</strong> {{ records|selectattr('status', 'equalto', 'completed')|list|length }}
+                        <strong class="ms-3">In Progress:</strong> {{ records|selectattr('status', 'equalto', 'in_progress')|list|length }}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

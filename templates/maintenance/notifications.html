@@ -1,0 +1,66 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col">
+        <div class="d-flex justify-content-between align-items-center">
+            <h2 class="border-bottom pb-2"><i class="fas fa-bell me-2"></i>Notifications</h2>
+            <form action="{{ url_for('maintenance.mark_all_notifications_read') }}" method="post">
+                <button type="submit" class="btn btn-success">
+                    <i class="fas fa-check-double me-2"></i>Mark All as Read
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
+
+<div class="card shadow">
+    <div class="card-header bg-info text-white">
+        <h5 class="mb-0"><i class="fas fa-bell me-2"></i>All Notifications</h5>
+    </div>
+    <div class="card-body">
+        {% if notifications %}
+            <div class="list-group">
+                {% for notification in notifications %}
+                    <div class="list-group-item list-group-item-action {% if not notification.read %}list-group-item-primary{% endif %}">
+                        <div class="d-flex w-100 justify-content-between">
+                            <h5 class="mb-1">{{ notification.title }}</h5>
+                            <small>{{ notification.created_at|format_datetime }}</small>
+                        </div>
+                        <p class="mb-1">{{ notification.message }}</p>
+                        <div class="d-flex justify-content-between align-items-center">
+                            <span class="badge bg-{{ 'success' if notification.read else 'warning' }}">
+                                {{ 'Read' if notification.read else 'Unread' }}
+                            </span>
+                            <div>
+                                {% if notification.schedule_id %}
+                                <a href="{{ url_for('maintenance.view_schedule', schedule_id=notification.schedule_id) }}" class="btn btn-sm btn-info me-2">
+                                    <i class="fas fa-calendar-alt me-1"></i>View Schedule
+                                </a>
+                                {% endif %}
+                                {% if not notification.read %}
+                                <form action="{{ url_for('maintenance.mark_notification_read', notification_id=notification.id) }}" method="post" class="d-inline">
+                                    <button type="submit" class="btn btn-sm btn-success">
+                                        <i class="fas fa-check me-1"></i>Mark as Read
+                                    </button>
+                                </form>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="alert alert-info">
+                <i class="fas fa-info-circle me-2"></i>You have no notifications.
+            </div>
+        {% endif %}
+    </div>
+    <div class="card-footer">
+        <div class="d-flex justify-content-between align-items-center">
+            <span>Total Notifications: {{ notifications|length }}</span>
+            <span>Unread: {{ notifications|selectattr('read', 'equalto', false)|list|length }}</span>
+        </div>
+    </div>
+</div>
+{% endblock %}

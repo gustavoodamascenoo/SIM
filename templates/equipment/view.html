@@ -1,0 +1,218 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col">
+        <div class="d-flex justify-content-between align-items-center">
+            <h2 class="border-bottom pb-2">
+                <i class="fas fa-snowflake me-2"></i>Equipment Details
+            </h2>
+            <div>
+                {% if current_user.is_admin() or current_user.is_supervisor() %}
+                <a href="{{ url_for('equipment.edit', equipment_id=equipment.id) }}" class="btn btn-warning me-2">
+                    <i class="fas fa-edit me-1"></i>Edit
+                </a>
+                {% endif %}
+                <a href="{{ url_for('equipment.index') }}" class="btn btn-secondary">
+                    <i class="fas fa-arrow-left me-1"></i>Back
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-lg-8">
+        <div class="card shadow mb-4">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0"><i class="fas fa-info-circle me-2"></i>Basic Information</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <dl class="row">
+                            <dt class="col-sm-5">ID Number:</dt>
+                            <dd class="col-sm-7">{{ equipment.identification_number }}</dd>
+                            
+                            <dt class="col-sm-5">Model:</dt>
+                            <dd class="col-sm-7">{{ equipment.model }}</dd>
+                            
+                            <dt class="col-sm-5">Manufacturer:</dt>
+                            <dd class="col-sm-7">{{ equipment.manufacturer }}</dd>
+                            
+                            <dt class="col-sm-5">Power:</dt>
+                            <dd class="col-sm-7">{{ equipment.power }} kW</dd>
+                            
+                            <dt class="col-sm-5">Serial Number:</dt>
+                            <dd class="col-sm-7">{{ equipment.serial_number or 'N/A' }}</dd>
+                        </dl>
+                    </div>
+                    <div class="col-md-6">
+                        <dl class="row">
+                            <dt class="col-sm-5">Installation Date:</dt>
+                            <dd class="col-sm-7">{{ equipment.installation_date|format_date }}</dd>
+                            
+                            <dt class="col-sm-5">Warranty End:</dt>
+                            <dd class="col-sm-7">{{ equipment.warranty_end_date|format_date if equipment.warranty_end_date else 'N/A' }}</dd>
+                            
+                            <dt class="col-sm-5">Status:</dt>
+                            <dd class="col-sm-7">
+                                <span class="badge bg-{{ 'success' if equipment.status == 'active' else ('warning' if equipment.status == 'maintenance' else 'danger') }}">
+                                    {{ equipment.status }}
+                                </span>
+                            </dd>
+                            
+                            <dt class="col-sm-5">Last Maintenance:</dt>
+                            <dd class="col-sm-7">{{ equipment.last_maintenance_date|format_datetime if equipment.last_maintenance_date else 'Never' }}</dd>
+                            
+                            <dt class="col-sm-5">Created:</dt>
+                            <dd class="col-sm-7">{{ equipment.created_at|format_datetime }}</dd>
+                        </dl>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="card shadow mb-4">
+            <div class="card-header bg-info text-white">
+                <h5 class="mb-0"><i class="fas fa-map-marker-alt me-2"></i>Location</h5>
+            </div>
+            <div class="card-body">
+                <dl class="row">
+                    <dt class="col-sm-3">Building:</dt>
+                    <dd class="col-sm-9">{{ equipment.location_building }}</dd>
+                    
+                    <dt class="col-sm-3">Floor:</dt>
+                    <dd class="col-sm-9">{{ equipment.location_floor }}</dd>
+                    
+                    <dt class="col-sm-3">Room:</dt>
+                    <dd class="col-sm-9">{{ equipment.location_room }}</dd>
+                    
+                    <dt class="col-sm-3">Details:</dt>
+                    <dd class="col-sm-9">{{ equipment.location_details or 'N/A' }}</dd>
+                </dl>
+            </div>
+        </div>
+        
+        {% if equipment.notes %}
+        <div class="card shadow mb-4">
+            <div class="card-header bg-secondary text-white">
+                <h5 class="mb-0"><i class="fas fa-sticky-note me-2"></i>Notes</h5>
+            </div>
+            <div class="card-body">
+                <p class="card-text">{{ equipment.notes }}</p>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+    
+    <div class="col-lg-4">
+        <div class="card shadow mb-4">
+            <div class="card-header bg-success text-white">
+                <h5 class="mb-0"><i class="fas fa-tools me-2"></i>Maintenance Plans</h5>
+            </div>
+            <div class="card-body">
+                {% if equipment.maintenance_plans %}
+                    <div class="list-group">
+                        {% for plan in equipment.maintenance_plans %}
+                            <a href="{{ url_for('maintenance.view_plan', plan_id=plan.id) }}" class="list-group-item list-group-item-action">
+                                <div class="d-flex w-100 justify-content-between">
+                                    <h6 class="mb-1">{{ plan.name }}</h6>
+                                    <small class="text-{{ 'success' if plan.is_active else 'danger' }}">
+                                        {{ 'Active' if plan.is_active else 'Inactive' }}
+                                    </small>
+                                </div>
+                                <p class="mb-1 text-muted">Frequency: Every {{ plan.frequency_days }} days</p>
+                                <small>{{ plan.description|truncate(50) if plan.description else 'No description' }}</small>
+                            </a>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle me-2"></i>No maintenance plans found for this equipment.
+                        {% if current_user.is_admin() or current_user.is_supervisor() %}
+                            <a href="{{ url_for('maintenance.add_plan') }}" class="alert-link">Add a plan</a>
+                        {% endif %}
+                    </div>
+                {% endif %}
+            </div>
+            {% if current_user.is_admin() or current_user.is_supervisor() %}
+            <div class="card-footer">
+                <a href="{{ url_for('maintenance.add_plan') }}" class="btn btn-success btn-sm w-100">
+                    <i class="fas fa-plus me-1"></i>Add Maintenance Plan
+                </a>
+            </div>
+            {% endif %}
+        </div>
+        
+        <div class="card shadow mb-4">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0"><i class="fas fa-calendar-alt me-2"></i>Recent Maintenance</h5>
+            </div>
+            <div class="card-body">
+                {% if equipment.maintenance_records %}
+                    <div class="list-group">
+                        {% for record in equipment.maintenance_records[:5] %}
+                            <a href="{{ url_for('maintenance.view_record', record_id=record.id) }}" class="list-group-item list-group-item-action">
+                                <div class="d-flex w-100 justify-content-between">
+                                    <h6 class="mb-1">{{ record.start_time|format_date }}</h6>
+                                    <span class="badge bg-{{ 'success' if record.status == 'completed' else 'warning' }}">
+                                        {{ record.status }}
+                                    </span>
+                                </div>
+                                <p class="mb-1">Technician: {{ record.technician.first_name }} {{ record.technician.last_name }}</p>
+                                <small>{{ record.notes|truncate(50) if record.notes else 'No notes' }}</small>
+                            </a>
+                        {% endfor %}
+                    </div>
+                    {% if equipment.maintenance_records|length > 5 %}
+                        <div class="mt-2 text-center">
+                            <a href="{{ url_for('maintenance.records') }}" class="btn btn-outline-primary btn-sm">View All Records</a>
+                        </div>
+                    {% endif %}
+                {% else %}
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle me-2"></i>No maintenance records found for this equipment.
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+        
+        <div class="card shadow mb-4">
+            <div class="card-header bg-danger text-white">
+                <h5 class="mb-0"><i class="fas fa-calendar-check me-2"></i>Upcoming Maintenance</h5>
+            </div>
+            <div class="card-body">
+                {% set upcoming = equipment.maintenance_schedules|selectattr('status', 'equalto', 'scheduled')|list %}
+                {% if upcoming %}
+                    <div class="list-group">
+                        {% for schedule in upcoming[:5] %}
+                            <a href="{{ url_for('maintenance.view_schedule', schedule_id=schedule.id) }}" class="list-group-item list-group-item-action">
+                                <div class="d-flex w-100 justify-content-between">
+                                    <h6 class="mb-1">{{ schedule.scheduled_date|format_datetime }}</h6>
+                                    <small>{{ schedule.maintenance_plan.name }}</small>
+                                </div>
+                                <small>{{ schedule.notes|truncate(50) if schedule.notes else 'No notes' }}</small>
+                            </a>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle me-2"></i>No upcoming maintenance scheduled for this equipment.
+                        {% if current_user.is_admin() or current_user.is_supervisor() %}
+                            <a href="{{ url_for('maintenance.add_schedule') }}" class="alert-link">Schedule maintenance</a>
+                        {% endif %}
+                    </div>
+                {% endif %}
+            </div>
+            {% if current_user.is_admin() or current_user.is_supervisor() %}
+            <div class="card-footer">
+                <a href="{{ url_for('maintenance.add_schedule') }}" class="btn btn-danger btn-sm w-100">
+                    <i class="fas fa-plus me-1"></i>Schedule Maintenance
+                </a>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

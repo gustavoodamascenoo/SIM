@@ -1,0 +1,161 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col">
+        <h2 class="border-bottom pb-2"><i class="fas fa-edit me-2"></i>Edit Equipment</h2>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-lg-10 mx-auto">
+        <div class="card shadow">
+            <div class="card-header bg-warning text-dark">
+                <h5 class="mb-0"><i class="fas fa-snowflake me-2"></i>Equipment Details</h5>
+            </div>
+            <div class="card-body">
+                <form method="POST" action="{{ url_for('equipment.edit', equipment_id=equipment.id) }}">
+                    {{ form.hidden_tag() }}
+                    
+                    <div class="row mb-3">
+                        <div class="col-md-4">
+                            <label for="{{ form.identification_number.id }}" class="form-label">Identification Number *</label>
+                            {{ form.identification_number(class="form-control") }}
+                            {% if form.identification_number.errors %}
+                                {% for error in form.identification_number.errors %}
+                                    <div class="text-danger">{{ error }}</div>
+                                {% endfor %}
+                            {% endif %}
+                        </div>
+                        <div class="col-md-4">
+                            <label for="{{ form.model.id }}" class="form-label">Model *</label>
+                            {{ form.model(class="form-control") }}
+                            {% if form.model.errors %}
+                                {% for error in form.model.errors %}
+                                    <div class="text-danger">{{ error }}</div>
+                                {% endfor %}
+                            {% endif %}
+                        </div>
+                        <div class="col-md-4">
+                            <label for="{{ form.manufacturer.id }}" class="form-label">Manufacturer *</label>
+                            {{ form.manufacturer(class="form-control") }}
+                            {% if form.manufacturer.errors %}
+                                {% for error in form.manufacturer.errors %}
+                                    <div class="text-danger">{{ error }}</div>
+                                {% endfor %}
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <div class="row mb-3">
+                        <div class="col-md-4">
+                            <label for="{{ form.power.id }}" class="form-label">Power (kW) *</label>
+                            {{ form.power(class="form-control") }}
+                            {% if form.power.errors %}
+                                {% for error in form.power.errors %}
+                                    <div class="text-danger">{{ error }}</div>
+                                {% endfor %}
+                            {% endif %}
+                        </div>
+                        <div class="col-md-4">
+                            <label for="{{ form.installation_date.id }}" class="form-label">Installation Date *</label>
+                            {{ form.installation_date(class="form-control", type="date") }}
+                            {% if form.installation_date.errors %}
+                                {% for error in form.installation_date.errors %}
+                                    <div class="text-danger">{{ error }}</div>
+                                {% endfor %}
+                            {% endif %}
+                        </div>
+                        <div class="col-md-4">
+                            <label for="{{ form.warranty_end_date.id }}" class="form-label">Warranty End Date</label>
+                            {{ form.warranty_end_date(class="form-control", type="date") }}
+                            {% if form.warranty_end_date.errors %}
+                                {% for error in form.warranty_end_date.errors %}
+                                    <div class="text-danger">{{ error }}</div>
+                                {% endfor %}
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <div class="row mb-3">
+                        <div class="col-md-4">
+                            <label for="{{ form.location_building.id }}" class="form-label">Building *</label>
+                            {{ form.location_building(class="form-control") }}
+                            {% if form.location_building.errors %}
+                                {% for error in form.location_building.errors %}
+                                    <div class="text-danger">{{ error }}</div>
+                                {% endfor %}
+                            {% endif %}
+                        </div>
+                        <div class="col-md-4">
+                            <label for="{{ form.location_floor.id }}" class="form-label">Floor *</label>
+                            {{ form.location_floor(class="form-control") }}
+                            {% if form.location_floor.errors %}
+                                {% for error in form.location_floor.errors %}
+                                    <div class="text-danger">{{ error }}</div>
+                                {% endfor %}
+                            {% endif %}
+                        </div>
+                        <div class="col-md-4">
+                            <label for="{{ form.location_room.id }}" class="form-label">Room *</label>
+                            {{ form.location_room(class="form-control") }}
+                            {% if form.location_room.errors %}
+                                {% for error in form.location_room.errors %}
+                                    <div class="text-danger">{{ error }}</div>
+                                {% endfor %}
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <div class="row mb-3">
+                        <div class="col-md-8">
+                            <label for="{{ form.location_details.id }}" class="form-label">Location Details</label>
+                            {{ form.location_details(class="form-control") }}
+                            {% if form.location_details.errors %}
+                                {% for error in form.location_details.errors %}
+                                    <div class="text-danger">{{ error }}</div>
+                                {% endfor %}
+                            {% endif %}
+                        </div>
+                        <div class="col-md-4">
+                            <label for="{{ form.serial_number.id }}" class="form-label">Serial Number</label>
+                            {{ form.serial_number(class="form-control") }}
+                            {% if form.serial_number.errors %}
+                                {% for error in form.serial_number.errors %}
+                                    <div class="text-danger">{{ error }}</div>
+                                {% endfor %}
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <div class="row mb-3">
+                        <div class="col-md-4">
+                            <label for="{{ form.status.id }}" class="form-label">Status *</label>
+                            {{ form.status(class="form-select") }}
+                            {% if form.status.errors %}
+                                {% for error in form.status.errors %}
+                                    <div class="text-danger">{{ error }}</div>
+                                {% endfor %}
+                            {% endif %}
+                        </div>
+                        <div class="col-md-8">
+                            <label for="{{ form.notes.id }}" class="form-label">Notes</label>
+                            {{ form.notes(class="form-control", rows=3) }}
+                            {% if form.notes.errors %}
+                                {% for error in form.notes.errors %}
+                                    <div class="text-danger">{{ error }}</div>
+                                {% endfor %}
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <div class="d-flex justify-content-between">
+                        <a href="{{ url_for('equipment.index') }}" class="btn btn-secondary">Cancel</a>
+                        {{ form.submit(class="btn btn-warning") }}
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

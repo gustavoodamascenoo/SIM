@@ -1,0 +1,158 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col">
+        <h2 class="border-bottom pb-2"><i class="fas fa-calendar-plus me-2"></i>Schedule Maintenance</h2>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-lg-8 mx-auto">
+        <div class="card shadow">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0"><i class="fas fa-calendar-alt me-2"></i>Maintenance Schedule Details</h5>
+            </div>
+            <div class="card-body">
+                <form method="POST" action="{{ url_for('maintenance.add_schedule') }}">
+                    {{ form.hidden_tag() }}
+                    
+                    <div class="mb-3">
+                        <label for="{{ form.equipment_id.id }}" class="form-label">Equipment *</label>
+                        {{ form.equipment_id(class="form-select", id="equipment-select") }}
+                        {% if form.equipment_id.errors %}
+                            {% for error in form.equipment_id.errors %}
+                                <div class="text-danger">{{ error }}</div>
+                            {% endfor %}
+                        {% endif %}
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="{{ form.maintenance_plan_id.id }}" class="form-label">Maintenance Plan *</label>
+                        {{ form.maintenance_plan_id(class="form-select", id="plan-select") }}
+                        <div id="no-plans-message" class="text-danger d-none mt-2">
+                            No maintenance plans found for the selected equipment. Please <a href="{{ url_for('maintenance.add_plan') }}">create a maintenance plan</a> first.
+                        </div>
+                        {% if form.maintenance_plan_id.errors %}
+                            {% for error in form.maintenance_plan_id.errors %}
+                                <div class="text-danger">{{ error }}</div>
+                            {% endfor %}
+                        {% endif %}
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="{{ form.scheduled_date.id }}" class="form-label">Scheduled Date and Time *</label>
+                        {{ form.scheduled_date(class="form-control", type="datetime-local") }}
+                        {% if form.scheduled_date.errors %}
+                            {% for error in form.scheduled_date.errors %}
+                                <div class="text-danger">{{ error }}</div>
+                            {% endfor %}
+                        {% endif %}
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="{{ form.notes.id }}" class="form-label">Notes</label>
+                        {{ form.notes(class="form-control", rows=3) }}
+                        {% if form.notes.errors %}
+                            {% for error in form.notes.errors %}
+                                <div class="text-danger">{{ error }}</div>
+                            {% endfor %}
+                        {% endif %}
+                    </div>
+                    
+                    <div class="alert alert-info mb-4">
+                        <i class="fas fa-info-circle me-2"></i>All technicians will be notified of this scheduled maintenance.
+                    </div>
+                    
+                    <div class="d-flex justify-content-between">
+                        <a href="{{ url_for('maintenance.schedule_list') }}" class="btn btn-secondary">Cancel</a>
+                        {{ form.submit(class="btn btn-primary") }}
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const equipmentSelect = document.getElementById('equipment-select');
+        const planSelect = document.getElementById('plan-select');
+        const noPlansMessage = document.getElementById('no-plans-message');
+        
+        // Object to store maintenance plans by equipment ID
+        const maintenancePlansByEquipment = {};
+        
+        // Function to update maintenance plan options based on selected equipment
+        function updateMaintenancePlans() {
+            // Clear existing options
+            planSelect.innerHTML = '';
+            
+            const equipmentId = equipmentSelect.value;
+            
+            if (equipmentId && maintenancePlansByEquipment[equipmentId]) {
+                const plans = maintenancePlansByEquipment[equipmentId];
+                
+                if (plans.length > 0) {
+                    // Add options for each plan
+                    plans.forEach(plan => {
+                        const option = document.createElement('option');
+                        option.value = plan.id;
+                        option.textContent = plan.name;
+                        planSelect.appendChild(option);
+                    });
+                    
+                    // Hide no plans message and enable select
+                    noPlansMessage.classList.add('d-none');
+                    planSelect.disabled = false;
+                } else {
+                    // Show no plans message and disable select
+                    noPlansMessage.classList.remove('d-none');
+                    planSelect.disabled = true;
+                }
+            } else {
+                // Show no plans message and disable select
+                noPlansMessage.classList.remove('d-none');
+                planSelect.disabled = true;
+            }
+        }
+        
+        // Fetch maintenance plans when equipment selection changes
+        equipmentSelect.addEventListener('change', function() {
+            const equipmentId = this.value;
+            
+            if (equipmentId) {
+                // Check if we already have this data
+                if (!maintenancePlansByEquipment[equipmentId]) {
+                    // Fetch maintenance plans for this equipment
+                    fetch(`/api/equipment/${equipmentId}/maintenance_plans`)
+                        .then(response => response.json())
+                        .then(data => {
+                            maintenancePlansByEquipment[equipmentId] = data;
+                            updateMaintenancePlans();
+                        })
+                        .catch(error => {
+                            console.error('Error fetching maintenance plans:', error);
+                            noPlansMessage.classList.remove('d-none');
+                            planSelect.disabled = true;
+                        });
+                } else {
+                    // Use cached data
+                    updateMaintenancePlans();
+                }
+            } else {
+                planSelect.innerHTML = '';
+                noPlansMessage.classList.add('d-none');
+                planSelect.disabled = true;
+            }
+        });
+        
+        // Trigger change event to load initial plans
+        if (equipmentSelect.value) {
+            equipmentSelect.dispatchEvent(new Event('change'));
+        }
+    });
+</script>
+{% endblock %}

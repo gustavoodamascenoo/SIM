@@ -1,0 +1,185 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col">
+        <h2 class="border-bottom pb-2"><i class="fas fa-edit me-2"></i>Edit Checklist Template</h2>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-lg-8 mx-auto">
+        <div class="card shadow">
+            <div class="card-header bg-warning text-dark">
+                <h5 class="mb-0"><i class="fas fa-clipboard-list me-2"></i>Checklist Template Details</h5>
+            </div>
+            <div class="card-body">
+                <form method="POST" action="{{ url_for('maintenance.edit_checklist', checklist_id=checklist.id) }}" id="checklistForm">
+                    {{ form.hidden_tag() }}
+                    
+                    <div class="mb-3">
+                        <label for="{{ form.maintenance_plan_id.id }}" class="form-label">Maintenance Plan *</label>
+                        {{ form.maintenance_plan_id(class="form-select") }}
+                        {% if form.maintenance_plan_id.errors %}
+                            {% for error in form.maintenance_plan_id.errors %}
+                                <div class="text-danger">{{ error }}</div>
+                            {% endfor %}
+                        {% endif %}
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="{{ form.name.id }}" class="form-label">Template Name *</label>
+                        {{ form.name(class="form-control") }}
+                        {% if form.name.errors %}
+                            {% for error in form.name.errors %}
+                                <div class="text-danger">{{ error }}</div>
+                            {% endfor %}
+                        {% endif %}
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="{{ form.description.id }}" class="form-label">Description</label>
+                        {{ form.description(class="form-control", rows=3) }}
+                        {% if form.description.errors %}
+                            {% for error in form.description.errors %}
+                                <div class="text-danger">{{ error }}</div>
+                            {% endfor %}
+                        {% endif %}
+                    </div>
+                    
+                    <h5 class="border-bottom pb-2 mt-4">Checklist Items</h5>
+                    <div class="alert alert-info mb-3">
+                        <i class="fas fa-info-circle me-2"></i>Edit tasks that should be performed during this maintenance. You can mark items as required or optional.
+                    </div>
+                    
+                    <div id="items-container">
+                        {% for item_form in form.items %}
+                            <div class="card mb-3 item-card">
+                                <div class="card-body">
+                                    <div class="row">
+                                        <div class="col-md-9">
+                                            <label for="{{ item_form.description.id }}" class="form-label">Task Description *</label>
+                                            {{ item_form.description(class="form-control") }}
+                                            {{ item_form.order(value=loop.index) }}
+                                        </div>
+                                        <div class="col-md-2">
+                                            <label class="form-label d-block">Required</label>
+                                            <div class="form-check form-switch">
+                                                {{ item_form.is_required(class="form-check-input") }}
+                                                <label class="form-check-label" for="{{ item_form.is_required.id }}">Yes</label>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-1 d-flex align-items-end">
+                                            <button type="button" class="btn btn-danger remove-item" {% if loop.index == 1 and form.items|length == 1 %}disabled{% endif %}>
+                                                <i class="fas fa-times"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                    
+                    <div class="mb-4">
+                        <button type="button" id="add-item-btn" class="btn btn-success">
+                            <i class="fas fa-plus me-1"></i>Add Item
+                        </button>
+                    </div>
+                    
+                    <div class="d-flex justify-content-between">
+                        <a href="{{ url_for('maintenance.checklists') }}" class="btn btn-secondary">Cancel</a>
+                        {{ form.submit(class="btn btn-warning") }}
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const itemsContainer = document.getElementById('items-container');
+        const addItemBtn = document.getElementById('add-item-btn');
+        
+        // Function to get the template for a new item
+        function getItemTemplate(index) {
+            return `
+                <div class="card mb-3 item-card">
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-9">
+                                <label class="form-label">Task Description *</label>
+                                <input class="form-control" id="items-${index}-description" name="items-${index}-description" required type="text">
+                                <input id="items-${index}-order" name="items-${index}-order" type="hidden" value="${index+1}">
+                            </div>
+                            <div class="col-md-2">
+                                <label class="form-label d-block">Required</label>
+                                <div class="form-check form-switch">
+                                    <input class="form-check-input" id="items-${index}-is_required" name="items-${index}-is_required" checked type="checkbox" value="y">
+                                    <label class="form-check-label" for="items-${index}-is_required">Yes</label>
+                                </div>
+                            </div>
+                            <div class="col-md-1 d-flex align-items-end">
+                                <button type="button" class="btn btn-danger remove-item">
+                                    <i class="fas fa-times"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+        
+        // Add event listener for adding new items
+        addItemBtn.addEventListener('click', function() {
+            const index = document.querySelectorAll('.item-card').length;
+            itemsContainer.insertAdjacentHTML('beforeend', getItemTemplate(index));
+            updateRemoveButtons();
+        });
+        
+        // Add event delegation for removing items
+        itemsContainer.addEventListener('click', function(e) {
+            if (e.target.closest('.remove-item')) {
+                e.target.closest('.item-card').remove();
+                updateItemOrders();
+                updateRemoveButtons();
+            }
+        });
+        
+        // Function to update the order hidden inputs
+        function updateItemOrders() {
+            const items = document.querySelectorAll('.item-card');
+            items.forEach((item, index) => {
+                const orderInput = item.querySelector('input[name$="-order"]');
+                orderInput.value = index + 1;
+                
+                // Update the name and id attributes if necessary
+                const inputs = item.querySelectorAll('input');
+                inputs.forEach(input => {
+                    const nameMatch = input.name.match(/items-(\d+)-/);
+                    if (nameMatch) {
+                        const oldIndex = nameMatch[1];
+                        const suffix = input.name.split('-').pop();
+                        input.name = `items-${index}-${suffix}`;
+                        input.id = `items-${index}-${suffix}`;
+                    }
+                });
+            });
+        }
+        
+        // Function to disable remove button for the first item
+        function updateRemoveButtons() {
+            const removeButtons = document.querySelectorAll('.remove-item');
+            if (removeButtons.length === 1) {
+                removeButtons[0].disabled = true;
+            } else {
+                removeButtons.forEach(button => {
+                    button.disabled = false;
+                });
+            }
+        }
+    });
+</script>
+{% endblock %}

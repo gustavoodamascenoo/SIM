@@ -1,0 +1,246 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col">
+        <div class="d-flex justify-content-between align-items-center">
+            <h2 class="border-bottom pb-2"><i class="fas fa-users me-2"></i>Technician Performance</h2>
+            <div>
+                <a href="{{ url_for('reports.export') }}?report_type=technician_performance&start_date={{ start_date.strftime('%Y-%m-%d') }}&end_date={{ end_date.strftime('%Y-%m-%d') }}" class="btn btn-success me-2">
+                    <i class="fas fa-file-csv me-1"></i>Export to CSV
+                </a>
+                <a href="{{ url_for('reports.index') }}" class="btn btn-secondary">
+                    <i class="fas fa-arrow-left me-1"></i>Back to Reports
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mb-4">
+    <div class="col">
+        <div class="card shadow">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0"><i class="fas fa-calendar-alt me-2"></i>Time Period</h5>
+            </div>
+            <div class="card-body">
+                <form method="POST" action="{{ url_for('reports.technician_performance') }}">
+                    {{ form.hidden_tag() }}
+                    
+                    <div class="row">
+                        <div class="col-md-4 mb-3">
+                            <label for="{{ form.start_date.id }}" class="form-label">Start Date</label>
+                            {{ form.start_date(class="form-control", type="date", value=start_date.strftime('%Y-%m-%d')) }}
+                            {% if form.start_date.errors %}
+                                {% for error in form.start_date.errors %}
+                                    <div class="text-danger">{{ error }}</div>
+                                {% endfor %}
+                            {% endif %}
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label for="{{ form.end_date.id }}" class="form-label">End Date</label>
+                            {{ form.end_date(class="form-control", type="date", value=end_date.strftime('%Y-%m-%d')) }}
+                            {% if form.end_date.errors %}
+                                {% for error in form.end_date.errors %}
+                                    <div class="text-danger">{{ error }}</div>
+                                {% endfor %}
+                            {% endif %}
+                        </div>
+                        <div class="col-md-4 d-flex align-items-end mb-3">
+                            {{ form.submit(class="btn btn-primary") }}
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col">
+        <div class="card shadow">
+            <div class="card-header bg-info text-white d-flex justify-content-between align-items-center">
+                <h5 class="mb-0"><i class="fas fa-chart-bar me-2"></i>Performance Summary</h5>
+                <span>{{ start_date.strftime('%Y-%m-%d') }} to {{ end_date.strftime('%Y-%m-%d') }}</span>
+            </div>
+            <div class="card-body">
+                {% if technician_data %}
+                    <div class="table-responsive">
+                        <table class="table table-striped table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Technician</th>
+                                    <th>Tasks Completed</th>
+                                    <th>Tasks In Progress</th>
+                                    <th>Total Tasks</th>
+                                    <th>Completion Rate</th>
+                                    <th>Avg Duration (hrs)</th>
+                                    <th>Efficiency Rating</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for data in technician_data|sort(attribute='completed', reverse=true) %}
+                                <tr>
+                                    <td>{{ data.technician.first_name }} {{ data.technician.last_name }}</td>
+                                    <td>{{ data.completed }}</td>
+                                    <td>{{ data.in_progress }}</td>
+                                    <td>{{ data.total }}</td>
+                                    <td>
+                                        {% if data.total > 0 %}
+                                            {{ (data.completed / data.total * 100)|round }}%
+                                        {% else %}
+                                            N/A
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ data.avg_duration|round(2) }}</td>
+                                    <td>
+                                        {% if data.avg_duration > 0 %}
+                                            {% set efficiency = (5 - (data.avg_duration / 5))|round|int %}
+                                            {% if efficiency < 1 %}{% set efficiency = 1 %}{% endif %}
+                                            {% if efficiency > 5 %}{% set efficiency = 5 %}{% endif %}
+                                            
+                                            <div class="text-center">
+                                                {% for i in range(efficiency) %}
+                                                    <i class="fas fa-star text-warning"></i>
+                                                {% endfor %}
+                                                {% for i in range(5 - efficiency) %}
+                                                    <i class="far fa-star text-muted"></i>
+                                                {% endfor %}
+                                            </div>
+                                        {% else %}
+                                            N/A
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <div class="row mt-4">
+                        <div class="col-md-6">
+                            <h5 class="border-bottom pb-2">Completed Tasks Comparison</h5>
+                            <div class="chart-container" style="position: relative; height:300px;">
+                                <canvas id="completedTasksChart"></canvas>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <h5 class="border-bottom pb-2">Average Duration Comparison</h5>
+                            <div class="chart-container" style="position: relative; height:300px;">
+                                <canvas id="avgDurationChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                {% else %}
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle me-2"></i>No technician performance data available for the selected period.
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+{% if technician_data %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Extract data for charts
+        const technicians = [
+            {% for data in technician_data %}
+                "{{ data.technician.first_name }} {{ data.technician.last_name }}",
+            {% endfor %}
+        ];
+        
+        const completedTasks = [
+            {% for data in technician_data %}
+                {{ data.completed }},
+            {% endfor %}
+        ];
+        
+        const avgDurations = [
+            {% for data in technician_data %}
+                {{ data.avg_duration|round(2) }},
+            {% endfor %}
+        ];
+        
+        // Tasks completed chart
+        const completedCtx = document.getElementById('completedTasksChart').getContext('2d');
+        new Chart(completedCtx, {
+            type: 'bar',
+            data: {
+                labels: technicians,
+                datasets: [{
+                    label: 'Completed Tasks',
+                    data: completedTasks,
+                    backgroundColor: 'rgba(75, 192, 192, 0.7)',
+                    borderColor: 'rgba(75, 192, 192, 1)',
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        title: {
+                            display: true,
+                            text: 'Number of Tasks'
+                        }
+                    }
+                },
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'top',
+                    },
+                    title: {
+                        display: true,
+                        text: 'Completed Maintenance Tasks'
+                    }
+                }
+            }
+        });
+        
+        // Average duration chart
+        const durationCtx = document.getElementById('avgDurationChart').getContext('2d');
+        new Chart(durationCtx, {
+            type: 'bar',
+            data: {
+                labels: technicians,
+                datasets: [{
+                    label: 'Average Duration (hours)',
+                    data: avgDurations,
+                    backgroundColor: 'rgba(54, 162, 235, 0.7)',
+                    borderColor: 'rgba(54, 162, 235, 1)',
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        title: {
+                            display: true,
+                            text: 'Hours'
+                        }
+                    }
+                },
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'top',
+                    },
+                    title: {
+                        display: true,
+                        text: 'Average Maintenance Duration'
+                    }
+                }
+            }
+        });
+    });
+</script>
+{% endif %}
+{% endblock %}

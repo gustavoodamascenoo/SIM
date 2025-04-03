@@ -1,0 +1,188 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col">
+        <div class="d-flex justify-content-between align-items-center">
+            <h2 class="border-bottom pb-2"><i class="fas fa-clipboard-list me-2"></i>Perform Maintenance</h2>
+            <a href="{{ url_for('maintenance.view_schedule', schedule_id=schedule.id) }}" class="btn btn-secondary">
+                <i class="fas fa-arrow-left me-1"></i>Back to Schedule
+            </a>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-lg-8 mx-auto">
+        <div class="card shadow mb-4">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0"><i class="fas fa-clipboard-check me-2"></i>Maintenance Checklist</h5>
+            </div>
+            <div class="card-body">
+                <div class="mb-4">
+                    <h6 class="border-bottom pb-2">Equipment Information</h6>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <dl class="row mb-0">
+                                <dt class="col-sm-5">Equipment:</dt>
+                                <dd class="col-sm-7">{{ schedule.equipment.identification_number }}</dd>
+                                
+                                <dt class="col-sm-5">Model:</dt>
+                                <dd class="col-sm-7">{{ schedule.equipment.model }}</dd>
+                            </dl>
+                        </div>
+                        <div class="col-md-6">
+                            <dl class="row mb-0">
+                                <dt class="col-sm-5">Location:</dt>
+                                <dd class="col-sm-7">{{ schedule.equipment.location_building }}, Floor {{ schedule.equipment.location_floor }}, {{ schedule.equipment.location_room }}</dd>
+                                
+                                <dt class="col-sm-5">Scheduled:</dt>
+                                <dd class="col-sm-7">{{ schedule.scheduled_date|format_datetime }}</dd>
+                            </dl>
+                        </div>
+                    </div>
+                </div>
+                
+                <form method="POST" action="{{ url_for('maintenance.perform_maintenance', schedule_id=schedule.id) }}">
+                    {{ form.hidden_tag() }}
+                    {{ form.equipment_id }}
+                    {{ form.schedule_id }}
+                    
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label for="{{ form.start_time.id }}" class="form-label">Start Time *</label>
+                            {{ form.start_time(class="form-control", type="datetime-local") }}
+                            {% if form.start_time.errors %}
+                                {% for error in form.start_time.errors %}
+                                    <div class="text-danger">{{ error }}</div>
+                                {% endfor %}
+                            {% endif %}
+                        </div>
+                        <div class="col-md-6">
+                            <label for="{{ form.end_time.id }}" class="form-label">End Time</label>
+                            {{ form.end_time(class="form-control", type="datetime-local") }}
+                            <small class="form-text text-muted">Leave blank if maintenance is still in progress</small>
+                            {% if form.end_time.errors %}
+                                {% for error in form.end_time.errors %}
+                                    <div class="text-danger">{{ error }}</div>
+                                {% endfor %}
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="{{ form.status.id }}" class="form-label">Status *</label>
+                        {{ form.status(class="form-select") }}
+                        {% if form.status.errors %}
+                            {% for error in form.status.errors %}
+                                <div class="text-danger">{{ error }}</div>
+                            {% endfor %}
+                        {% endif %}
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="{{ form.issues_found.id }}" class="form-label">Issues Found</label>
+                        {{ form.issues_found(class="form-control", rows=3) }}
+                        {% if form.issues_found.errors %}
+                            {% for error in form.issues_found.errors %}
+                                <div class="text-danger">{{ error }}</div>
+                            {% endfor %}
+                        {% endif %}
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="{{ form.actions_taken.id }}" class="form-label">Actions Taken</label>
+                        {{ form.actions_taken(class="form-control", rows=3) }}
+                        {% if form.actions_taken.errors %}
+                            {% for error in form.actions_taken.errors %}
+                                <div class="text-danger">{{ error }}</div>
+                            {% endfor %}
+                        {% endif %}
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="{{ form.notes.id }}" class="form-label">Additional Notes</label>
+                        {{ form.notes(class="form-control", rows=2) }}
+                        {% if form.notes.errors %}
+                            {% for error in form.notes.errors %}
+                                <div class="text-danger">{{ error }}</div>
+                            {% endfor %}
+                        {% endif %}
+                    </div>
+                    
+                    <h6 class="border-bottom pb-2 mt-4">Checklist Items</h6>
+                    
+                    {% if checklist_items %}
+                        <div class="list-group mb-4">
+                            {% for i, item in enumerate(checklist_items) %}
+                                <div class="list-group-item">
+                                    <div class="mb-2">
+                                        <strong>{{ i+1 }}. {{ item.description }}</strong>
+                                        {% if item.is_required %}
+                                            <span class="badge bg-danger ms-1">Required</span>
+                                        {% else %}
+                                            <span class="badge bg-secondary ms-1">Optional</span>
+                                        {% endif %}
+                                    </div>
+                                    
+                                    {{ form.checklist_results[i].checklist_item_id(value=item.id) }}
+                                    
+                                    <div class="row">
+                                        <div class="col-md-4">
+                                            <label for="{{ form.checklist_results[i].status.id }}" class="form-label">Status *</label>
+                                            {{ form.checklist_results[i].status(class="form-select") }}
+                                        </div>
+                                        <div class="col-md-8">
+                                            <label for="{{ form.checklist_results[i].notes.id }}" class="form-label">Notes</label>
+                                            {{ form.checklist_results[i].notes(class="form-control") }}
+                                        </div>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <div class="alert alert-warning mb-4">
+                            <i class="fas fa-exclamation-triangle me-2"></i>No checklist items found for this maintenance plan.
+                        </div>
+                    {% endif %}
+                    
+                    <div class="alert alert-info mb-4">
+                        <i class="fas fa-info-circle me-2"></i>If you select "Completed" status, make sure to fill in the End Time and complete all required checklist items.
+                    </div>
+                    
+                    <div class="d-flex justify-content-between">
+                        <a href="{{ url_for('maintenance.view_schedule', schedule_id=schedule.id) }}" class="btn btn-secondary">Cancel</a>
+                        {{ form.submit(class="btn btn-primary") }}
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const statusSelect = document.getElementById('status');
+        const endTimeInput = document.getElementById('end_time');
+        
+        // Function to update end time visibility
+        function updateEndTimeRequirement() {
+            if (statusSelect.value === 'completed') {
+                endTimeInput.required = true;
+                endTimeInput.parentElement.classList.add('required');
+            } else {
+                endTimeInput.required = false;
+                endTimeInput.parentElement.classList.remove('required');
+            }
+        }
+        
+        // Check initial state
+        updateEndTimeRequirement();
+        
+        // Add event listener for status changes
+        statusSelect.addEventListener('change', updateEndTimeRequirement);
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,234 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col">
+        <div class="d-flex justify-content-between align-items-center">
+            <h2 class="border-bottom pb-2">
+                <i class="fas fa-tools me-2"></i>Maintenance Plan Details
+            </h2>
+            <div>
+                {% if current_user.is_admin() or current_user.is_supervisor() %}
+                <a href="{{ url_for('maintenance.edit_plan', plan_id=plan.id) }}" class="btn btn-warning me-2">
+                    <i class="fas fa-edit me-1"></i>Edit
+                </a>
+                {% endif %}
+                <a href="{{ url_for('maintenance.plans') }}" class="btn btn-secondary">
+                    <i class="fas fa-arrow-left me-1"></i>Back
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-lg-8">
+        <div class="card shadow mb-4">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0"><i class="fas fa-info-circle me-2"></i>Plan Information</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <dl class="row">
+                            <dt class="col-sm-4">Plan Name:</dt>
+                            <dd class="col-sm-8">{{ plan.name }}</dd>
+                            
+                            <dt class="col-sm-4">Equipment:</dt>
+                            <dd class="col-sm-8">
+                                <a href="{{ url_for('equipment.view', equipment_id=plan.equipment.id) }}">
+                                    {{ plan.equipment.identification_number }} ({{ plan.equipment.model }})
+                                </a>
+                            </dd>
+                            
+                            <dt class="col-sm-4">Frequency:</dt>
+                            <dd class="col-sm-8">Every {{ plan.frequency_days }} days</dd>
+                        </dl>
+                    </div>
+                    <div class="col-md-6">
+                        <dl class="row">
+                            <dt class="col-sm-4">Status:</dt>
+                            <dd class="col-sm-8">
+                                <span class="badge bg-{{ 'success' if plan.is_active else 'danger' }}">
+                                    {{ 'Active' if plan.is_active else 'Inactive' }}
+                                </span>
+                            </dd>
+                            
+                            <dt class="col-sm-4">Created:</dt>
+                            <dd class="col-sm-8">{{ plan.created_at|format_datetime }}</dd>
+                        </dl>
+                    </div>
+                </div>
+                
+                {% if plan.description %}
+                <div class="mt-3">
+                    <h6 class="border-bottom pb-2">Description</h6>
+                    <p>{{ plan.description }}</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+        
+        <div class="card shadow mb-4">
+            <div class="card-header bg-info text-white">
+                <h5 class="mb-0">
+                    <i class="fas fa-clipboard-list me-2"></i>Checklist Templates
+                    {% if current_user.is_admin() or current_user.is_supervisor() %}
+                    <a href="{{ url_for('maintenance.add_checklist') }}" class="btn btn-light btn-sm float-end">
+                        <i class="fas fa-plus me-1"></i>Add Checklist
+                    </a>
+                    {% endif %}
+                </h5>
+            </div>
+            <div class="card-body">
+                {% if plan.checklist_templates %}
+                    <div class="list-group">
+                        {% for template in plan.checklist_templates %}
+                            <div class="list-group-item">
+                                <div class="d-flex w-100 justify-content-between">
+                                    <h5 class="mb-1">{{ template.name }}</h5>
+                                    <small>{{ template.created_at|format_date }}</small>
+                                </div>
+                                <p class="mb-1">{{ template.description or 'No description' }}</p>
+                                
+                                <div class="mt-2">
+                                    <h6 class="text-muted">Checklist Items:</h6>
+                                    <ul class="list-group list-group-flush">
+                                        {% for item in template.checklist_items|sort(attribute='order') %}
+                                            <li class="list-group-item border-0 py-1 ps-0">
+                                                <i class="fas {{ 'fa-check-square text-success' if item.is_required else 'fa-square text-secondary' }} me-2"></i>
+                                                {{ item.description }}
+                                                {% if not item.is_required %}
+                                                    <span class="badge bg-secondary ms-1">Optional</span>
+                                                {% endif %}
+                                            </li>
+                                        {% endfor %}
+                                    </ul>
+                                </div>
+                                
+                                {% if current_user.is_admin() or current_user.is_supervisor() %}
+                                <div class="mt-2">
+                                    <a href="{{ url_for('maintenance.edit_checklist', checklist_id=template.id) }}" class="btn btn-warning btn-sm">
+                                        <i class="fas fa-edit me-1"></i>Edit
+                                    </a>
+                                    {% if current_user.is_admin() %}
+                                    <button type="button" class="btn btn-danger btn-sm ms-1" data-bs-toggle="modal" data-bs-target="#deleteTemplateModal{{ template.id }}">
+                                        <i class="fas fa-trash me-1"></i>Delete
+                                    </button>
+                                    
+                                    <!-- Delete Template Modal -->
+                                    <div class="modal fade" id="deleteTemplateModal{{ template.id }}" tabindex="-1" aria-labelledby="deleteTemplateModalLabel{{ template.id }}" aria-hidden="true">
+                                        <div class="modal-dialog">
+                                            <div class="modal-content">
+                                                <div class="modal-header bg-danger text-white">
+                                                    <h5 class="modal-title" id="deleteTemplateModalLabel{{ template.id }}">Confirm Deletion</h5>
+                                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                                </div>
+                                                <div class="modal-body">
+                                                    Are you sure you want to delete the checklist template <strong>{{ template.name }}</strong>?
+                                                    <br><br>
+                                                    <div class="alert alert-warning">
+                                                        <i class="fas fa-exclamation-triangle me-2"></i>This action cannot be undone. All checklist items will also be deleted.
+                                                    </div>
+                                                </div>
+                                                <div class="modal-footer">
+                                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                                    <form action="{{ url_for('maintenance.delete_checklist', checklist_id=template.id) }}" method="post">
+                                                        <button type="submit" class="btn btn-danger">Delete</button>
+                                                    </form>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    {% endif %}
+                                </div>
+                                {% endif %}
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle me-2"></i>No checklist templates found for this maintenance plan.
+                        {% if current_user.is_admin() or current_user.is_supervisor() %}
+                            <a href="{{ url_for('maintenance.add_checklist') }}" class="alert-link">Create a checklist template</a> to define maintenance tasks.
+                        {% endif %}
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-lg-4">
+        <div class="card shadow mb-4">
+            <div class="card-header bg-success text-white">
+                <h5 class="mb-0"><i class="fas fa-calendar-alt me-2"></i>Upcoming Schedules</h5>
+            </div>
+            <div class="card-body">
+                {% set upcoming_schedules = plan.equipment.maintenance_schedules|selectattr('maintenance_plan_id', 'equalto', plan.id)|selectattr('status', 'equalto', 'scheduled')|list %}
+                
+                {% if upcoming_schedules %}
+                    <div class="list-group">
+                        {% for schedule in upcoming_schedules|sort(attribute='scheduled_date') %}
+                            <a href="{{ url_for('maintenance.view_schedule', schedule_id=schedule.id) }}" class="list-group-item list-group-item-action">
+                                <div class="d-flex w-100 justify-content-between">
+                                    <h6 class="mb-1">{{ schedule.scheduled_date|format_datetime }}</h6>
+                                </div>
+                                <small>{{ schedule.notes|truncate(50) if schedule.notes else 'No notes' }}</small>
+                            </a>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle me-2"></i>No upcoming maintenance scheduled for this plan.
+                        {% if current_user.is_admin() or current_user.is_supervisor() %}
+                            <a href="{{ url_for('maintenance.add_schedule') }}" class="alert-link">Schedule maintenance</a>
+                        {% endif %}
+                    </div>
+                {% endif %}
+            </div>
+            {% if current_user.is_admin() or current_user.is_supervisor() %}
+            <div class="card-footer">
+                <a href="{{ url_for('maintenance.add_schedule') }}" class="btn btn-success btn-sm w-100">
+                    <i class="fas fa-plus me-1"></i>Schedule Maintenance
+                </a>
+            </div>
+            {% endif %}
+        </div>
+        
+        <div class="card shadow mb-4">
+            <div class="card-header bg-secondary text-white">
+                <h5 class="mb-0"><i class="fas fa-history me-2"></i>Recent Records</h5>
+            </div>
+            <div class="card-body">
+                {% set records = plan.equipment.maintenance_records|selectattr('schedule.maintenance_plan_id', 'equalto', plan.id)|list %}
+                
+                {% if records %}
+                    <div class="list-group">
+                        {% for record in records|sort(attribute='start_time', reverse=true)[:5] %}
+                            <a href="{{ url_for('maintenance.view_record', record_id=record.id) }}" class="list-group-item list-group-item-action">
+                                <div class="d-flex w-100 justify-content-between">
+                                    <h6 class="mb-1">{{ record.start_time|format_date }}</h6>
+                                    <span class="badge bg-{{ 'success' if record.status == 'completed' else 'warning' }}">
+                                        {{ record.status }}
+                                    </span>
+                                </div>
+                                <p class="mb-1">Technician: {{ record.technician.first_name }} {{ record.technician.last_name }}</p>
+                                <small>{{ record.notes|truncate(50) if record.notes else 'No notes' }}</small>
+                            </a>
+                        {% endfor %}
+                    </div>
+                    {% if records|length > 5 %}
+                        <div class="mt-2 text-center">
+                            <a href="{{ url_for('maintenance.records') }}" class="btn btn-outline-secondary btn-sm">View All Records</a>
+                        </div>
+                    {% endif %}
+                {% else %}
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle me-2"></i>No maintenance records found for this plan.
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

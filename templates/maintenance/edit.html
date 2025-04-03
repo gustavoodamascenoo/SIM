@@ -1,0 +1,81 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col">
+        <h2 class="border-bottom pb-2"><i class="fas fa-edit me-2"></i>Edit Maintenance Plan</h2>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-lg-8 mx-auto">
+        <div class="card shadow">
+            <div class="card-header bg-warning text-dark">
+                <h5 class="mb-0"><i class="fas fa-tools me-2"></i>Maintenance Plan Details</h5>
+            </div>
+            <div class="card-body">
+                <form method="POST" action="{{ url_for('maintenance.edit_plan', plan_id=plan.id) }}">
+                    {{ form.hidden_tag() }}
+                    
+                    <div class="mb-3">
+                        <label for="{{ form.equipment_id.id }}" class="form-label">Equipment *</label>
+                        {{ form.equipment_id(class="form-select") }}
+                        {% if form.equipment_id.errors %}
+                            {% for error in form.equipment_id.errors %}
+                                <div class="text-danger">{{ error }}</div>
+                            {% endfor %}
+                        {% endif %}
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="{{ form.name.id }}" class="form-label">Plan Name *</label>
+                        {{ form.name(class="form-control") }}
+                        {% if form.name.errors %}
+                            {% for error in form.name.errors %}
+                                <div class="text-danger">{{ error }}</div>
+                            {% endfor %}
+                        {% endif %}
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="{{ form.description.id }}" class="form-label">Description</label>
+                        {{ form.description(class="form-control", rows=3) }}
+                        {% if form.description.errors %}
+                            {% for error in form.description.errors %}
+                                <div class="text-danger">{{ error }}</div>
+                            {% endfor %}
+                        {% endif %}
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="{{ form.frequency_days.id }}" class="form-label">Frequency (days) *</label>
+                        {{ form.frequency_days(class="form-control") }}
+                        <small class="form-text text-muted">How often this maintenance should be performed (in days)</small>
+                        {% if form.frequency_days.errors %}
+                            {% for error in form.frequency_days.errors %}
+                                <div class="text-danger">{{ error }}</div>
+                            {% endfor %}
+                        {% endif %}
+                    </div>
+                    
+                    <div class="mb-3 form-check">
+                        {{ form.is_active(class="form-check-input") }}
+                        <label for="{{ form.is_active.id }}" class="form-check-label">Active</label>
+                        <small class="form-text text-muted d-block">If checked, this plan will be available for scheduling</small>
+                        {% if form.is_active.errors %}
+                            {% for error in form.is_active.errors %}
+                                <div class="text-danger">{{ error }}</div>
+                            {% endfor %}
+                        {% endif %}
+                    </div>
+                    
+                    <div class="d-flex justify-content-between">
+                        <a href="{{ url_for('maintenance.plans') }}" class="btn btn-secondary">Cancel</a>
+                        {{ form.submit(class="btn btn-warning") }}
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
