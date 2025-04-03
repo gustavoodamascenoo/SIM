@@ -12,7 +12,7 @@
                     {{ form.hidden_tag() }}
                     
                     <div class="mb-3">
-                        <label for="{{ form.username.id }}" class="form-label">Username</label>
+                        <label for="{{ form.username.id }}" class="form-label">Nome de Usuário</label>
                         {{ form.username(class="form-control") }}
                         {% if form.username.errors %}
                             {% for error in form.username.errors %}
@@ -22,7 +22,7 @@
                     </div>
                     
                     <div class="mb-3">
-                        <label for="{{ form.password.id }}" class="form-label">Password</label>
+                        <label for="{{ form.password.id }}" class="form-label">Senha</label>
                         {{ form.password(class="form-control") }}
                         {% if form.password.errors %}
                             {% for error in form.password.errors %}
@@ -33,7 +33,7 @@
                     
                     <div class="mb-3 form-check">
                         {{ form.remember(class="form-check-input") }}
-                        <label for="{{ form.remember.id }}" class="form-check-label">Remember Me</label>
+                        <label for="{{ form.remember.id }}" class="form-check-label">Lembrar Acesso</label>
                     </div>
                     
                     <div class="d-grid">
@@ -42,7 +42,7 @@
                 </form>
             </div>
             <div class="card-footer text-center">
-                <p class="mb-0">AC Maintenance Management System</p>
+                <p class="mb-0">Sistema de Gestão de Manutenção de Ar Condicionado</p>
             </div>
         </div>
     </div>
