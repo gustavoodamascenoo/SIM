@@ -1,0 +1,97 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col">
+        <div class="d-flex justify-content-between align-items-center">
+            <h2 class="border-bottom pb-2"><i class="fas fa-clipboard-list me-2"></i>Modelos de Checklist</h2>
+            {% if current_user.is_admin() or current_user.is_supervisor() %}
+            <a href="{{ url_for('maintenance.add_checklist') }}" class="btn btn-primary">
+                <i class="fas fa-plus me-2"></i>Adicionar Checklist
+            </a>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+{% if templates %}
+<div class="card shadow mb-4">
+    <div class="card-header bg-primary text-white">
+        <h5 class="mb-0"><i class="fas fa-list me-2"></i>Lista de Checklists</h5>
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-striped table-hover">
+                <thead>
+                    <tr>
+                        <th>Nome</th>
+                        <th>Plano de Manutenção</th>
+                        <th>Equipamento</th>
+                        <th>Itens</th>
+                        <th>Criado em</th>
+                        <th>Ações</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for template in templates %}
+                    <tr>
+                        <td>{{ template.name }}</td>
+                        <td>{{ template.maintenance_plan.name }}</td>
+                        <td>{{ template.maintenance_plan.equipment.identification_number }}</td>
+                        <td>{{ template.checklist_items|length }} itens</td>
+                        <td>{{ template.created_at|format_date }}</td>
+                        <td>
+                            <div class="btn-group" role="group">
+                                <a href="{{ url_for('maintenance.edit_checklist', checklist_id=template.id) }}" class="btn btn-sm btn-warning" title="Editar">
+                                    <i class="fas fa-edit"></i>
+                                </a>
+                                {% if current_user.is_admin() %}
+                                <button type="button" class="btn btn-sm btn-danger" title="Excluir" data-bs-toggle="modal" data-bs-target="#deleteModal{{ template.id }}">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                                {% endif %}
+                            </div>
+                            
+                            <!-- Delete Confirmation Modal -->
+                            {% if current_user.is_admin() %}
+                            <div class="modal fade" id="deleteModal{{ template.id }}" tabindex="-1" aria-labelledby="deleteModalLabel{{ template.id }}" aria-hidden="true">
+                                <div class="modal-dialog">
+                                    <div class="modal-content">
+                                        <div class="modal-header bg-danger text-white">
+                                            <h5 class="modal-title" id="deleteModalLabel{{ template.id }}">Confirmar Exclusão</h5>
+                                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                        </div>
+                                        <div class="modal-body">
+                                            Tem certeza que deseja excluir o checklist <strong>{{ template.name }}</strong>?
+                                            <br><br>
+                                            <div class="alert alert-warning">
+                                                <i class="fas fa-exclamation-triangle me-2"></i>Esta ação não pode ser desfeita.
+                                            </div>
+                                        </div>
+                                        <div class="modal-footer">
+                                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                                            <form action="{{ url_for('maintenance.delete_checklist', checklist_id=template.id) }}" method="post">
+                                                <button type="submit" class="btn btn-danger">Excluir</button>
+                                            </form>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% else %}
+<div class="alert alert-info" role="alert">
+    <i class="fas fa-info-circle me-2"></i>Nenhum modelo de checklist encontrado no sistema. 
+    {% if current_user.is_admin() or current_user.is_supervisor() %}
+    <a href="{{ url_for('maintenance.add_checklist') }}" class="alert-link">Adicione seu primeiro checklist</a>.
+    {% endif %}
+</div>
+{% endif %}
+{% endblock %}

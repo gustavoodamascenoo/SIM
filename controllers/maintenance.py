@@ -159,7 +159,7 @@ def delete_plan(plan_id):
 def checklists():
     """Display all checklist templates"""
     templates = ChecklistTemplate.query.all()
-    return render_template('maintenance/checklist.html', templates=templates)
+    return render_template('maintenance/checklists.html', templates=templates)
 
 @maintenance_bp.route('/checklists/add', methods=['GET', 'POST'])
 @login_required
@@ -193,7 +193,7 @@ def add_checklist():
             db.session.add(item)
         
         db.session.commit()
-        flash(f'Checklist template "{form.name.data}" has been created!', 'success')
+        flash(f'Modelo de checklist "{form.name.data}" foi criado com sucesso!', 'success')
         return redirect(url_for('maintenance.checklists'))
     
     # Ensure at least one item is available
@@ -243,7 +243,7 @@ def edit_checklist(checklist_id):
             db.session.add(item)
         
         db.session.commit()
-        flash(f'Checklist template "{checklist.name}" has been updated!', 'success')
+        flash(f'Modelo de checklist "{checklist.name}" foi atualizado com sucesso!', 'success')
         return redirect(url_for('maintenance.checklists'))
     
     return render_template('maintenance/edit_checklist.html', form=form, checklist=checklist)
@@ -263,7 +263,7 @@ def delete_checklist(checklist_id):
         ChecklistItem.query.filter_by(template_id=checklist.id).delete()
         db.session.delete(checklist)
         db.session.commit()
-        flash(f'Checklist template "{checklist.name}" has been deleted!', 'success')
+        flash(f'Modelo de checklist "{checklist.name}" foi excluído com sucesso!', 'success')
     except Exception as e:
         db.session.rollback()
         flash(f'Error deleting checklist: {str(e)}', 'danger')
