@@ -1,0 +1,35 @@
+Prompt para o AI de Criação de Softwares
+
+"Desenvolva um sistema robusto de gestão de manutenção para equipamentos de ar condicionado instalados em um edifício, considerando que os equipamentos possuem diversas potências e características. O sistema deverá ser desenvolvido em Python e o código-fonte completo deverá ser apresentado, mesmo que o sistema já esteja funcional. As funcionalidades principais devem incluir, mas não se limitar a:
+
+Cadastro de Equipamentos
+
+Permitir o cadastro completo dos equipamentos, incluindo informações detalhadas como número de identificação, modelo, fabricante, potência, data de instalação, local de instalação (ex: sala, andar, setor) e outras informações relevantes.
+
+Gestão de Usuários
+
+Implementar um módulo de gerenciamento de usuários que possibilite o cadastro de técnicos e membros da equipe de manutenção, com autenticação e controle de acesso, para que cada usuário possa acessar o sistema e visualizar as informações de acordo com seu perfil.
+
+Planejamento e Agendamento de Manutenção
+
+Possibilitar o cadastro e o agendamento de planos de manutenção para cada equipamento, definindo periodicidades, datas e horários para a realização das atividades.
+
+Permitir a criação de planos de manutenção customizados para diferentes categorias de equipamentos.
+
+Notificações para Técnicos
+
+Integrar um sistema de notificações para alertar os técnicos sobre as manutenções agendadas, informando quais equipamentos devem ser verificados e as respectivas datas e horários.
+
+Checklist de Atividades
+
+Baseado no plano de manutenção cadastrado, gerar um checklist para cada equipamento, listando todas as atividades previstas e permitindo o registro do status de cada item (ex: concluído, pendente, não aplicável).
+
+Funcionalidades Adicionais
+
+Incluir relatórios gerenciais que possibilitem a análise das manutenções realizadas, status dos equipamentos e histórico de intervenções.
+
+Garantir que o sistema seja escalável e facilmente integrável com outros módulos ou serviços, caso haja necessidade de expansão futura.
+
+Adotar boas práticas de desenvolvimento, como modularidade e clareza no código, para facilitar a manutenção e futuras atualizações.
+
+Desenvolva o sistema em Python, apresentando o código completo com comentários explicativos e instruções para execução. Certifique-se de que o código seja legível e bem estruturado, permitindo a fácil compreensão e futuras modificações."
