@@ -174,7 +174,7 @@ def add_checklist():
     
     if request.method == 'POST':
         # Check if the add_item button was clicked
-        if form.add_item.data:
+        if 'add_item' in request.form:
             form.items.append_entry()
             return render_template('maintenance/add_checklist.html', form=form)
         
