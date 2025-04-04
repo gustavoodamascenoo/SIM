@@ -172,29 +172,45 @@ def add_checklist():
     form = ChecklistTemplateForm()
     form.maintenance_plan_id.choices = [(p.id, p.name) for p in MaintenancePlan.query.all()]
     
-    if form.validate_on_submit():
-        checklist = ChecklistTemplate(
-            maintenance_plan_id=form.maintenance_plan_id.data,
-            name=form.name.data,
-            description=form.description.data
-        )
+    if request.method == 'POST':
+        # Check if the add_item button was clicked
+        if form.add_item.data:
+            form.items.append_entry()
+            return render_template('maintenance/add_checklist.html', form=form)
         
-        db.session.add(checklist)
-        db.session.commit()
-        
-        # Now add checklist items
-        for i, item_form in enumerate(form.items):
-            item = ChecklistItem(
-                template_id=checklist.id,
-                description=item_form.description.data,
-                is_required=item_form.is_required.data,
-                order=i+1
+        # Otherwise, handle form submission    
+        if form.validate_on_submit():
+            # Print form data for debugging
+            print(f"Form validated with {len(form.items.data)} items")
+            for i, item in enumerate(form.items.data):
+                print(f"Item {i}: {item}")
+            
+            checklist = ChecklistTemplate(
+                maintenance_plan_id=form.maintenance_plan_id.data,
+                name=form.name.data,
+                description=form.description.data
             )
-            db.session.add(item)
-        
-        db.session.commit()
-        flash(f'Modelo de checklist "{form.name.data}" foi criado com sucesso!', 'success')
-        return redirect(url_for('maintenance.checklists'))
+            
+            db.session.add(checklist)
+            db.session.commit()
+            
+            # Now add checklist items
+            for i, item_form in enumerate(form.items):
+                print(f"Processing item {i}: {item_form.description.data}")
+                item = ChecklistItem(
+                    template_id=checklist.id,
+                    description=item_form.description.data,
+                    is_required=item_form.is_required.data,
+                    order=i+1
+                )
+                db.session.add(item)
+            
+            db.session.commit()
+            flash(f'Modelo de checklist "{form.name.data}" foi criado com sucesso!', 'success')
+            return redirect(url_for('maintenance.checklists'))
+        else:
+            # Print validation errors
+            print(f"Form validation failed: {form.errors}")
     
     # Ensure at least one item is available
     if len(form.items) < 1:
