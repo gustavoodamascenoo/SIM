@@ -42,7 +42,7 @@
                     </div>
                     
                     <div id="items-container">
-                        {% for item in ChecklistItem.query.filter_by(template_id=checklist.id).order_by(ChecklistItem.order).all() %}
+                        {% for item in checklist_items %}
                             <div class="card mb-3 item-card">
                                 <div class="card-body">
                                     <div class="row">

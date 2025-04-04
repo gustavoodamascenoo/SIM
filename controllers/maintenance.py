@@ -237,6 +237,9 @@ def edit_checklist(checklist_id):
     form = ChecklistTemplateForm(obj=checklist)
     form.maintenance_plan_id.choices = [(p.id, p.name) for p in MaintenancePlan.query.all()]
     
+    # Get all existing checklist items
+    checklist_items = ChecklistItem.query.filter_by(template_id=checklist.id).order_by(ChecklistItem.order).all()
+    
     if request.method == 'POST':
         if 'maintenance_plan_id' in request.form and 'name' in request.form:
             try:
@@ -280,7 +283,7 @@ def edit_checklist(checklist_id):
         else:
             flash('Dados de formulário incompletos. Por favor, preencha todos os campos obrigatórios.', 'danger')
     
-    return render_template('maintenance/edit_checklist.html', form=form, checklist=checklist)
+    return render_template('maintenance/edit_checklist.html', form=form, checklist=checklist, checklist_items=checklist_items)
 
 @maintenance_bp.route('/checklists/<int:checklist_id>/delete', methods=['POST'])
 @login_required
