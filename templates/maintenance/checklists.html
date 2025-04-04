@@ -42,6 +42,9 @@
                         <td>{{ template.created_at|format_date }}</td>
                         <td>
                             <div class="btn-group" role="group">
+                                <a href="{{ url_for('maintenance.view_checklist', checklist_id=template.id) }}" class="btn btn-sm btn-info" title="Visualizar">
+                                    <i class="fas fa-eye"></i>
+                                </a>
                                 <a href="{{ url_for('maintenance.edit_checklist', checklist_id=template.id) }}" class="btn btn-sm btn-warning" title="Editar">
                                     <i class="fas fa-edit"></i>
                                 </a>

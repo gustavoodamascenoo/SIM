@@ -218,6 +218,13 @@ def add_checklist():
     
     return render_template('maintenance/add_checklist.html', form=form)
 
+@maintenance_bp.route('/checklists/<int:checklist_id>/view', methods=['GET'])
+@login_required
+def view_checklist(checklist_id):
+    """View checklist template details"""
+    checklist = ChecklistTemplate.query.get_or_404(checklist_id)
+    return render_template('maintenance/view_checklist.html', checklist=checklist)
+
 @maintenance_bp.route('/checklists/<int:checklist_id>/edit', methods=['GET', 'POST'])
 @login_required
 def edit_checklist(checklist_id):

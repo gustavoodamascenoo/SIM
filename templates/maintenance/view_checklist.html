@@ -1,0 +1,120 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col">
+        <h2 class="border-bottom pb-2"><i class="fas fa-clipboard-check me-2"></i>Visualizar Modelo de Checklist</h2>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-lg-8 mx-auto">
+        <div class="card shadow mb-4">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0"><i class="fas fa-info-circle me-2"></i>Informações do Checklist</h5>
+            </div>
+            <div class="card-body">
+                <div class="mb-3">
+                    <h5>Nome do Checklist</h5>
+                    <p class="lead">{{ checklist.name }}</p>
+                </div>
+                
+                <div class="mb-3">
+                    <h5>Plano de Manutenção</h5>
+                    <p>{{ checklist.maintenance_plan.name }}</p>
+                </div>
+                
+                <div class="mb-3">
+                    <h5>Equipamento</h5>
+                    <p>{{ checklist.maintenance_plan.equipment.identification_number }} - {{ checklist.maintenance_plan.equipment.model }}</p>
+                </div>
+                
+                {% if checklist.description %}
+                <div class="mb-3">
+                    <h5>Descrição</h5>
+                    <p>{{ checklist.description }}</p>
+                </div>
+                {% endif %}
+                
+                <div class="mb-3">
+                    <h5>Data de Criação</h5>
+                    <p>{{ checklist.created_at|format_datetime }}</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="card shadow">
+            <div class="card-header bg-info text-white">
+                <h5 class="mb-0"><i class="fas fa-tasks me-2"></i>Itens do Checklist</h5>
+            </div>
+            <div class="card-body">
+                {% if checklist.checklist_items %}
+                <div class="list-group">
+                    {% for item in checklist.checklist_items|sort(attribute='order') %}
+                    <div class="list-group-item">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <h6 class="mb-1">#{{ item.order }} - {{ item.description }}</h6>
+                                {% if item.is_required %}
+                                <span class="badge bg-danger">Obrigatório</span>
+                                {% else %}
+                                <span class="badge bg-warning">Opcional</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <div class="alert alert-warning">
+                    <i class="fas fa-exclamation-triangle me-2"></i>Este checklist não tem itens definidos.
+                </div>
+                {% endif %}
+            </div>
+        </div>
+        
+        <div class="d-flex justify-content-between mt-4">
+            <a href="{{ url_for('maintenance.checklists') }}" class="btn btn-secondary">
+                <i class="fas fa-arrow-left me-1"></i>Voltar
+            </a>
+            <div>
+                <a href="{{ url_for('maintenance.edit_checklist', checklist_id=checklist.id) }}" class="btn btn-warning">
+                    <i class="fas fa-edit me-1"></i>Editar
+                </a>
+                {% if current_user.is_admin() %}
+                <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#deleteModal">
+                    <i class="fas fa-trash me-1"></i>Excluir
+                </button>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+{% if current_user.is_admin() %}
+<!-- Delete Modal -->
+<div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title" id="deleteModalLabel">Confirmar Exclusão</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                Tem certeza que deseja excluir o checklist <strong>{{ checklist.name }}</strong>?
+                <br><br>
+                <div class="alert alert-warning">
+                    <i class="fas fa-exclamation-triangle me-2"></i>Esta ação não pode ser desfeita.
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <form action="{{ url_for('maintenance.delete_checklist', checklist_id=checklist.id) }}" method="post">
+                    <button type="submit" class="btn btn-danger">Excluir</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endblock %}
