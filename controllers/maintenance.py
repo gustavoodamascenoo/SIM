@@ -327,14 +327,14 @@ def add_schedule():
             notification = Notification(
                 user_id=tech.id,
                 schedule_id=schedule.id,
-                title='New Maintenance Scheduled',
-                message=f'Maintenance for {equipment.identification_number} ({equipment.model}) '
-                        f'has been scheduled for {form.scheduled_date.data.strftime("%Y-%m-%d %H:%M")}.'
+                title='Nova Manutenção Agendada',
+                message=f'Manutenção para {equipment.identification_number} ({equipment.model}) '
+                        f'foi agendada para {form.scheduled_date.data.strftime("%Y-%m-%d %H:%M")}.'
             )
             db.session.add(notification)
         
         db.session.commit()
-        flash('Maintenance has been scheduled and technicians have been notified!', 'success')
+        flash('Manutenção foi agendada e os técnicos foram notificados!', 'success')
         return redirect(url_for('maintenance.schedule_list'))
     
     return render_template('maintenance/add_schedule.html', form=form)
@@ -365,13 +365,13 @@ def view_schedule(schedule_id):
 def edit_schedule(schedule_id):
     """Edit scheduled maintenance"""
     if not (current_user.is_admin() or current_user.is_supervisor()):
-        flash('Access denied. You do not have permission to edit schedules.', 'danger')
+        flash('Acesso negado. Você não tem permissão para editar agendamentos.', 'danger')
         return redirect(url_for('maintenance.schedule_list'))
     
     schedule = MaintenanceSchedule.query.get_or_404(schedule_id)
     
     if schedule.status == 'completed':
-        flash('Cannot edit a completed maintenance schedule.', 'warning')
+        flash('Não é possível editar um agendamento de manutenção concluído.', 'warning')
         return redirect(url_for('maintenance.view_schedule', schedule_id=schedule.id))
     
     form = MaintenanceScheduleForm(obj=schedule)
@@ -396,13 +396,13 @@ def edit_schedule(schedule_id):
         # Update all technicians notifications
         notifications = Notification.query.filter_by(schedule_id=schedule.id).all()
         for notification in notifications:
-            notification.title = 'Maintenance Schedule Updated'
-            notification.message = f'Maintenance for {equipment.identification_number} ({equipment.model}) has been rescheduled to {form.scheduled_date.data.strftime("%Y-%m-%d %H:%M")}.'
+            notification.title = 'Agendamento de Manutenção Atualizado'
+            notification.message = f'Manutenção para {equipment.identification_number} ({equipment.model}) foi reagendada para {form.scheduled_date.data.strftime("%Y-%m-%d %H:%M")}.'
             notification.read = False
             notification.created_at = datetime.utcnow()
         
         db.session.commit()
-        flash('Maintenance schedule has been updated and technicians have been notified!', 'success')
+        flash('Agendamento de manutenção foi atualizado e os técnicos foram notificados!', 'success')
         return redirect(url_for('maintenance.schedule_list'))
     
     return render_template('maintenance/edit_schedule.html', form=form, schedule=schedule)
@@ -412,7 +412,7 @@ def edit_schedule(schedule_id):
 def delete_schedule(schedule_id):
     """Delete scheduled maintenance"""
     if not current_user.is_admin():
-        flash('Access denied. Only administrators can delete schedules.', 'danger')
+        flash('Acesso negado. Apenas administradores podem excluir agendamentos.', 'danger')
         return redirect(url_for('maintenance.schedule_list'))
     
     schedule = MaintenanceSchedule.query.get_or_404(schedule_id)
@@ -423,10 +423,10 @@ def delete_schedule(schedule_id):
         
         db.session.delete(schedule)
         db.session.commit()
-        flash('Maintenance schedule has been deleted!', 'success')
+        flash('Agendamento de manutenção foi excluído!', 'success')
     except Exception as e:
         db.session.rollback()
-        flash(f'Error deleting schedule: {str(e)}', 'danger')
+        flash(f'Erro ao excluir agendamento: {str(e)}', 'danger')
     
     return redirect(url_for('maintenance.schedule_list'))
 
@@ -453,7 +453,7 @@ def perform_maintenance(schedule_id):
     
     # Check if maintenance is already completed
     if schedule.status == 'completed':
-        flash('This maintenance task has already been completed.', 'info')
+        flash('Esta tarefa de manutenção já foi concluída.', 'info')
         return redirect(url_for('maintenance.view_schedule', schedule_id=schedule.id))
     
     # Get the checklist for this maintenance plan
@@ -462,7 +462,7 @@ def perform_maintenance(schedule_id):
     ).first()
     
     if not checklist_template:
-        flash('No checklist template found for this maintenance plan.', 'warning')
+        flash('Nenhum modelo de checklist encontrado para este plano de manutenção.', 'warning')
         return redirect(url_for('maintenance.view_schedule', schedule_id=schedule.id))
     
     # Get checklist items
@@ -526,13 +526,13 @@ def perform_maintenance(schedule_id):
                 notification = Notification(
                     user_id=supervisor.id,
                     schedule_id=schedule.id,
-                    title='Maintenance Completed',
-                    message=f'Maintenance for {equipment.identification_number} ({equipment.model}) has been completed by {current_user.first_name} {current_user.last_name}.'
+                    title='Manutenção Concluída',
+                    message=f'Manutenção para {equipment.identification_number} ({equipment.model}) foi concluída por {current_user.first_name} {current_user.last_name}.'
                 )
                 db.session.add(notification)
         
         db.session.commit()
-        flash('Maintenance record has been saved!', 'success')
+        flash('Registro de manutenção foi salvo!', 'success')
         return redirect(url_for('maintenance.records'))
     
     return render_template(
@@ -578,7 +578,7 @@ def mark_notification_read(notification_id):
     notification = Notification.query.get_or_404(notification_id)
     
     if notification.user_id != current_user.id:
-        flash('Access denied. This notification does not belong to you.', 'danger')
+        flash('Acesso negado. Esta notificação não pertence a você.', 'danger')
         return redirect(url_for('maintenance.notifications'))
     
     notification.read = True
@@ -592,6 +592,6 @@ def mark_all_notifications_read():
     """Mark all notifications as read for the current user"""
     Notification.query.filter_by(user_id=current_user.id, read=False).update({'read': True})
     db.session.commit()
-    flash('All notifications marked as read.', 'success')
+    flash('Todas as notificações foram marcadas como lidas.', 'success')
     
     return redirect(url_for('maintenance.notifications'))
