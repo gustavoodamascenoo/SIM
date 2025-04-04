@@ -69,6 +69,11 @@
                                                 <label class="form-check-label" for="items-{{ i }}-is_required">Sim</label>
                                             </div>
                                         </div>
+                                        <div class="col-md-1 d-flex align-items-end">
+                                            <button type="button" class="btn btn-danger remove-item" {% if i == 0 %}disabled{% endif %}>
+                                                <i class="fas fa-times"></i>
+                                            </button>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -76,7 +81,7 @@
                     </div>
                     
                     <div class="mb-4">
-                        <button type="submit" name="add_item" value="True" class="btn btn-success">
+                        <button type="button" id="add-item-btn" class="btn btn-success">
                             <i class="fas fa-plus me-1"></i>Adicionar Item
                         </button>
                     </div>
@@ -90,4 +95,91 @@
         </div>
     </div>
 </div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const itemsContainer = document.getElementById('items-container');
+        const addItemBtn = document.getElementById('add-item-btn');
+        
+        // Function to get the template for a new item
+        function getItemTemplate(index) {
+            return `
+                <div class="card mb-3 item-card">
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-9">
+                                <label class="form-label">Descrição da Tarefa *</label>
+                                <input class="form-control" id="items-${index}-description" name="items-${index}-description" required type="text">
+                                <input id="items-${index}-order" name="items-${index}-order" type="hidden" value="${index+1}">
+                            </div>
+                            <div class="col-md-2">
+                                <label class="form-label d-block">Obrigatório</label>
+                                <div class="form-check form-switch">
+                                    <input class="form-check-input" id="items-${index}-is_required" name="items-${index}-is_required" checked type="checkbox" value="y">
+                                    <label class="form-check-label" for="items-${index}-is_required">Sim</label>
+                                </div>
+                            </div>
+                            <div class="col-md-1 d-flex align-items-end">
+                                <button type="button" class="btn btn-danger remove-item">
+                                    <i class="fas fa-times"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+        
+        // Add event listener for adding new items
+        addItemBtn.addEventListener('click', function() {
+            const index = document.querySelectorAll('.item-card').length;
+            itemsContainer.insertAdjacentHTML('beforeend', getItemTemplate(index));
+            updateRemoveButtons();
+        });
+        
+        // Add event delegation for removing items
+        itemsContainer.addEventListener('click', function(e) {
+            if (e.target.closest('.remove-item')) {
+                e.target.closest('.item-card').remove();
+                updateItemOrders();
+                updateRemoveButtons();
+            }
+        });
+        
+        // Function to update the order hidden inputs
+        function updateItemOrders() {
+            const items = document.querySelectorAll('.item-card');
+            items.forEach((item, index) => {
+                const orderInput = item.querySelector('input[name$="-order"]');
+                orderInput.value = index + 1;
+                
+                // Update the name and id attributes if necessary
+                const inputs = item.querySelectorAll('input');
+                inputs.forEach(input => {
+                    const nameMatch = input.name.match(/items-(\d+)-/);
+                    if (nameMatch) {
+                        const oldIndex = nameMatch[1];
+                        const suffix = input.name.split('-').pop();
+                        input.name = `items-${index}-${suffix}`;
+                        input.id = `items-${index}-${suffix}`;
+                    }
+                });
+            });
+        }
+        
+        // Function to disable remove button for the first item
+        function updateRemoveButtons() {
+            const removeButtons = document.querySelectorAll('.remove-item');
+            if (removeButtons.length === 1) {
+                removeButtons[0].disabled = true;
+            } else {
+                removeButtons.forEach(button => {
+                    button.disabled = false;
+                });
+            }
+        }
+    });
+</script>
 {% endblock %}

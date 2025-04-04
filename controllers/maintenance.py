@@ -173,10 +173,6 @@ def add_checklist():
     form.maintenance_plan_id.choices = [(p.id, p.name) for p in MaintenancePlan.query.all()]
     
     if request.method == 'POST':
-        # Check if the add_item button was clicked
-        if 'add_item' in request.form:
-            form.items.append_entry()
-            return render_template('maintenance/add_checklist.html', form=form)
         
         # Otherwise, handle form submission    
         if form.validate_on_submit():
