@@ -173,72 +173,48 @@ def add_checklist():
     form.maintenance_plan_id.choices = [(p.id, p.name) for p in MaintenancePlan.query.all()]
     
     if request.method == 'POST':
-        
-        # Otherwise, handle form submission    
-        if form.validate_on_submit():
-            # Print form data for debugging
-            print(f"Form validated with {len(form.items.data)} items")
-            for i, item in enumerate(form.items.data):
-                print(f"Item {i}: {item}")
-            
-            checklist = ChecklistTemplate(
-                maintenance_plan_id=form.maintenance_plan_id.data,
-                name=form.name.data,
-                description=form.description.data
-            )
-            
-            db.session.add(checklist)
-            db.session.commit()
-            
-            # Check for items using the request.form directly
-            item_descriptions = []
-            item_required = []
-            item_orders = []
-            
-            # Collect all items from form
-            for key, value in request.form.items():
-                if key.startswith('items-') and key.endswith('-description'):
-                    index = key.split('-')[1]
-                    item_descriptions.append((int(index), value))
-                elif key.startswith('items-') and key.endswith('-is_required'):
-                    index = key.split('-')[1]
-                    item_required.append((int(index), True))
-                elif key.startswith('items-') and key.endswith('-order'):
-                    index = key.split('-')[1]
-                    item_orders.append((int(index), int(value)))
-            
-            # Sort items by index
-            item_descriptions.sort(key=lambda x: x[0])
-            
-            # Create checklist items
-            for i, (_, description) in enumerate(item_descriptions):
-                # Find required value for this index
-                is_required = True  # Default to True
-                for idx, req in item_required:
-                    if idx == i:
-                        is_required = req
-                        break
+        if 'maintenance_plan_id' in request.form and 'name' in request.form:
+            try:
+                maintenance_plan_id = int(request.form['maintenance_plan_id'])
+                name = request.form['name']
+                description = request.form.get('description', '')
                 
-                print(f"Processing item {i}: {description}, Required: {is_required}")
-                
-                item = ChecklistItem(
-                    template_id=checklist.id,
-                    description=description,
-                    is_required=is_required,
-                    order=i+1
+                # Create the checklist template
+                checklist = ChecklistTemplate(
+                    maintenance_plan_id=maintenance_plan_id,
+                    name=name,
+                    description=description
                 )
-                db.session.add(item)
-            
-            db.session.commit()
-            flash(f'Modelo de checklist "{form.name.data}" foi criado com sucesso!', 'success')
-            return redirect(url_for('maintenance.checklists'))
+                db.session.add(checklist)
+                db.session.commit()
+                
+                # Get items from form
+                item_descriptions = request.form.getlist('item_descriptions[]')
+                item_required = request.form.getlist('item_required[]')
+                
+                # Process items
+                for i, description in enumerate(item_descriptions):
+                    if description:  # Only add non-empty descriptions
+                        is_required = i < len(item_required) and item_required[i] == 'true'
+                        print(f"Processing item {i}: {description}, Required: {is_required}")
+                        
+                        item = ChecklistItem(
+                            template_id=checklist.id,
+                            description=description,
+                            is_required=is_required,
+                            order=i+1
+                        )
+                        db.session.add(item)
+                
+                db.session.commit()
+                flash(f'Modelo de checklist "{name}" foi criado com sucesso!', 'success')
+                return redirect(url_for('maintenance.checklists'))
+            except Exception as e:
+                db.session.rollback()
+                flash(f'Erro ao criar checklist: {str(e)}', 'danger')
+                print(f"Error creating checklist: {str(e)}")
         else:
-            # Print validation errors
-            print(f"Form validation failed: {form.errors}")
-    
-    # Ensure at least one item is available
-    if len(form.items) < 1:
-        form.items.append_entry()
+            flash('Dados de formulário incompletos. Por favor, preencha todos os campos obrigatórios.', 'danger')
     
     return render_template('maintenance/add_checklist.html', form=form)
 
@@ -254,66 +230,48 @@ def edit_checklist(checklist_id):
     form = ChecklistTemplateForm(obj=checklist)
     form.maintenance_plan_id.choices = [(p.id, p.name) for p in MaintenancePlan.query.all()]
     
-    # Pre-populate items
-    if request.method == 'GET':
-        form.items.pop_entry()  # Remove the default empty entry
-        for item in ChecklistItem.query.filter_by(template_id=checklist.id).order_by(ChecklistItem.order):
-            form.items.append_entry({
-                'description': item.description,
-                'is_required': item.is_required,
-                'order': item.order
-            })
-    
-    if form.validate_on_submit():
-        checklist.maintenance_plan_id = form.maintenance_plan_id.data
-        checklist.name = form.name.data
-        checklist.description = form.description.data
-        
-        # Delete existing items
-        ChecklistItem.query.filter_by(template_id=checklist.id).delete()
-        
-        # Check for items using the request.form directly
-        item_descriptions = []
-        item_required = []
-        item_orders = []
-        
-        # Collect all items from form
-        for key, value in request.form.items():
-            if key.startswith('items-') and key.endswith('-description'):
-                index = key.split('-')[1]
-                item_descriptions.append((int(index), value))
-            elif key.startswith('items-') and key.endswith('-is_required'):
-                index = key.split('-')[1]
-                item_required.append((int(index), True))
-            elif key.startswith('items-') and key.endswith('-order'):
-                index = key.split('-')[1]
-                item_orders.append((int(index), int(value)))
-        
-        # Sort items by index
-        item_descriptions.sort(key=lambda x: x[0])
-        
-        # Create checklist items
-        for i, (_, description) in enumerate(item_descriptions):
-            # Find required value for this index
-            is_required = True  # Default to True
-            for idx, req in item_required:
-                if idx == i:
-                    is_required = req
-                    break
-            
-            print(f"Processing item {i}: {description}, Required: {is_required}")
-            
-            item = ChecklistItem(
-                template_id=checklist.id,
-                description=description,
-                is_required=is_required,
-                order=i+1
-            )
-            db.session.add(item)
-        
-        db.session.commit()
-        flash(f'Modelo de checklist "{checklist.name}" foi atualizado com sucesso!', 'success')
-        return redirect(url_for('maintenance.checklists'))
+    if request.method == 'POST':
+        if 'maintenance_plan_id' in request.form and 'name' in request.form:
+            try:
+                maintenance_plan_id = int(request.form['maintenance_plan_id'])
+                name = request.form['name']
+                description = request.form.get('description', '')
+                
+                # Update checklist template
+                checklist.maintenance_plan_id = maintenance_plan_id
+                checklist.name = name
+                checklist.description = description
+                
+                # Delete existing items
+                ChecklistItem.query.filter_by(template_id=checklist.id).delete()
+                
+                # Get items from form
+                item_descriptions = request.form.getlist('item_descriptions[]')
+                item_required = request.form.getlist('item_required[]')
+                
+                # Process items
+                for i, description in enumerate(item_descriptions):
+                    if description:  # Only add non-empty descriptions
+                        is_required = i < len(item_required) and item_required[i] == 'true'
+                        print(f"Processing item {i}: {description}, Required: {is_required}")
+                        
+                        item = ChecklistItem(
+                            template_id=checklist.id,
+                            description=description,
+                            is_required=is_required,
+                            order=i+1
+                        )
+                        db.session.add(item)
+                
+                db.session.commit()
+                flash(f'Modelo de checklist "{name}" foi atualizado com sucesso!', 'success')
+                return redirect(url_for('maintenance.checklists'))
+            except Exception as e:
+                db.session.rollback()
+                flash(f'Erro ao atualizar checklist: {str(e)}', 'danger')
+                print(f"Error updating checklist: {str(e)}")
+        else:
+            flash('Dados de formulário incompletos. Por favor, preencha todos os campos obrigatórios.', 'danger')
     
     return render_template('maintenance/edit_checklist.html', form=form, checklist=checklist)
 

@@ -15,36 +15,25 @@
             </div>
             <div class="card-body">
                 <form method="POST" action="{{ url_for('maintenance.edit_checklist', checklist_id=checklist.id) }}" id="checklistForm">
-                    {{ form.hidden_tag() }}
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                     
                     <div class="mb-3">
-                        <label for="{{ form.maintenance_plan_id.id }}" class="form-label">Plano de Manutenção *</label>
-                        {{ form.maintenance_plan_id(class="form-select") }}
-                        {% if form.maintenance_plan_id.errors %}
-                            {% for error in form.maintenance_plan_id.errors %}
-                                <div class="text-danger">{{ error }}</div>
+                        <label class="form-label">Plano de Manutenção *</label>
+                        <select class="form-select" name="maintenance_plan_id" required>
+                            {% for plan_id, plan_name in form.maintenance_plan_id.choices %}
+                                <option value="{{ plan_id }}" {% if plan_id == checklist.maintenance_plan_id %}selected{% endif %}>{{ plan_name }}</option>
                             {% endfor %}
-                        {% endif %}
+                        </select>
                     </div>
                     
                     <div class="mb-3">
-                        <label for="{{ form.name.id }}" class="form-label">Nome do Modelo *</label>
-                        {{ form.name(class="form-control") }}
-                        {% if form.name.errors %}
-                            {% for error in form.name.errors %}
-                                <div class="text-danger">{{ error }}</div>
-                            {% endfor %}
-                        {% endif %}
+                        <label class="form-label">Nome do Modelo *</label>
+                        <input type="text" class="form-control" name="name" required value="{{ checklist.name }}">
                     </div>
                     
                     <div class="mb-3">
-                        <label for="{{ form.description.id }}" class="form-label">Descrição</label>
-                        {{ form.description(class="form-control", rows=3) }}
-                        {% if form.description.errors %}
-                            {% for error in form.description.errors %}
-                                <div class="text-danger">{{ error }}</div>
-                            {% endfor %}
-                        {% endif %}
+                        <label class="form-label">Descrição</label>
+                        <textarea class="form-control" name="description" rows="3">{{ checklist.description }}</textarea>
                     </div>
                     
                     <h5 class="border-bottom pb-2 mt-4">Itens do Checklist</h5>
@@ -53,25 +42,46 @@
                     </div>
                     
                     <div id="items-container">
-                        {% for i in range(form.items|length) %}
+                        {% for item in ChecklistItem.query.filter_by(template_id=checklist.id).order_by(ChecklistItem.order).all() %}
                             <div class="card mb-3 item-card">
                                 <div class="card-body">
                                     <div class="row">
                                         <div class="col-md-9">
                                             <label class="form-label">Descrição da Tarefa *</label>
-                                            <input class="form-control" id="items-{{ i }}-description" name="items-{{ i }}-description" required type="text" value="{{ form.items[i].description.data or '' }}">
-                                            <input id="items-{{ i }}-order" name="items-{{ i }}-order" type="hidden" value="{{ i+1 }}">
-                                            <input type="hidden" name="items-{{ i }}-csrf_token" value="{{ csrf_token() }}">
+                                            <input class="form-control" name="item_descriptions[]" required type="text" value="{{ item.description }}">
                                         </div>
                                         <div class="col-md-2">
                                             <label class="form-label d-block">Obrigatório</label>
                                             <div class="form-check form-switch">
-                                                <input class="form-check-input" id="items-{{ i }}-is_required" name="items-{{ i }}-is_required" {% if form.items[i].is_required.data %}checked{% endif %} type="checkbox" value="y">
-                                                <label class="form-check-label" for="items-{{ i }}-is_required">Sim</label>
+                                                <input class="form-check-input" name="item_required[]" {% if item.is_required %}checked{% endif %} type="checkbox" value="true">
+                                                <label class="form-check-label">Sim</label>
                                             </div>
                                         </div>
                                         <div class="col-md-1 d-flex align-items-end">
-                                            <button type="button" class="btn btn-danger remove-item" {% if i == 0 and form.items|length == 1 %}disabled{% endif %}>
+                                            <button type="button" class="btn btn-danger remove-item" {% if loop.index == 1 and loop.length == 1 %}disabled{% endif %}>
+                                                <i class="fas fa-times"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        {% else %}
+                            <div class="card mb-3 item-card">
+                                <div class="card-body">
+                                    <div class="row">
+                                        <div class="col-md-9">
+                                            <label class="form-label">Descrição da Tarefa *</label>
+                                            <input class="form-control" name="item_descriptions[]" required type="text">
+                                        </div>
+                                        <div class="col-md-2">
+                                            <label class="form-label d-block">Obrigatório</label>
+                                            <div class="form-check form-switch">
+                                                <input class="form-check-input" name="item_required[]" checked type="checkbox" value="true">
+                                                <label class="form-check-label">Sim</label>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-1 d-flex align-items-end">
+                                            <button type="button" class="btn btn-danger remove-item" disabled>
                                                 <i class="fas fa-times"></i>
                                             </button>
                                         </div>
@@ -89,7 +99,7 @@
                     
                     <div class="d-flex justify-content-between">
                         <a href="{{ url_for('maintenance.checklists') }}" class="btn btn-secondary">Cancelar</a>
-                        {{ form.submit(class="btn btn-primary") }}
+                        <button type="submit" class="btn btn-primary">Atualizar</button>
                     </div>
                 </form>
             </div>
@@ -103,25 +113,22 @@
     document.addEventListener('DOMContentLoaded', function() {
         const itemsContainer = document.getElementById('items-container');
         const addItemBtn = document.getElementById('add-item-btn');
-        const csrf_token = document.querySelector('input[name="csrf_token"]').value;
         
         // Function to get the template for a new item
-        function getItemTemplate(index) {
+        function getItemTemplate() {
             return `
                 <div class="card mb-3 item-card">
                     <div class="card-body">
                         <div class="row">
                             <div class="col-md-9">
                                 <label class="form-label">Descrição da Tarefa *</label>
-                                <input class="form-control" id="items-${index}-description" name="items-${index}-description" required type="text">
-                                <input id="items-${index}-order" name="items-${index}-order" type="hidden" value="${index+1}">
-                                <input type="hidden" name="items-${index}-csrf_token" value="${csrf_token}">
+                                <input class="form-control" name="item_descriptions[]" required type="text">
                             </div>
                             <div class="col-md-2">
                                 <label class="form-label d-block">Obrigatório</label>
                                 <div class="form-check form-switch">
-                                    <input class="form-check-input" id="items-${index}-is_required" name="items-${index}-is_required" checked type="checkbox" value="y">
-                                    <label class="form-check-label" for="items-${index}-is_required">Sim</label>
+                                    <input class="form-check-input" name="item_required[]" checked type="checkbox" value="true">
+                                    <label class="form-check-label">Sim</label>
                                 </div>
                             </div>
                             <div class="col-md-1 d-flex align-items-end">
@@ -137,8 +144,7 @@
         
         // Add event listener for adding new items
         addItemBtn.addEventListener('click', function() {
-            const index = document.querySelectorAll('.item-card').length;
-            itemsContainer.insertAdjacentHTML('beforeend', getItemTemplate(index));
+            itemsContainer.insertAdjacentHTML('beforeend', getItemTemplate());
             updateRemoveButtons();
         });
         
@@ -146,31 +152,9 @@
         itemsContainer.addEventListener('click', function(e) {
             if (e.target.closest('.remove-item')) {
                 e.target.closest('.item-card').remove();
-                updateItemOrders();
                 updateRemoveButtons();
             }
         });
-        
-        // Function to update the order hidden inputs
-        function updateItemOrders() {
-            const items = document.querySelectorAll('.item-card');
-            items.forEach((item, index) => {
-                const orderInput = item.querySelector('input[name$="-order"]');
-                orderInput.value = index + 1;
-                
-                // Update the name and id attributes if necessary
-                const inputs = item.querySelectorAll('input');
-                inputs.forEach(input => {
-                    const nameMatch = input.name.match(/items-(\d+)-/);
-                    if (nameMatch) {
-                        const oldIndex = nameMatch[1];
-                        const suffix = input.name.split('-').pop();
-                        input.name = `items-${index}-${suffix}`;
-                        input.id = `items-${index}-${suffix}`;
-                    }
-                });
-            });
-        }
         
         // Function to disable remove button for the first item
         function updateRemoveButtons() {
@@ -183,19 +167,6 @@
                 });
             }
         }
-
-        // Add CSRF token to any existing items that may not have it
-        document.querySelectorAll('.item-card').forEach((item, index) => {
-            const hasToken = item.querySelector('input[name$="-csrf_token"]');
-            if (!hasToken) {
-                const descInput = item.querySelector('input[name$="-description"]');
-                const tokenInput = document.createElement('input');
-                tokenInput.type = 'hidden';
-                tokenInput.name = `items-${index}-csrf_token`;
-                tokenInput.value = csrf_token;
-                descInput.parentNode.insertBefore(tokenInput, descInput.nextSibling);
-            }
-        });
     });
 </script>
 {% endblock %}
