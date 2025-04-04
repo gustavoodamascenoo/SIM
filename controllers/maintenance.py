@@ -190,13 +190,41 @@ def add_checklist():
             db.session.add(checklist)
             db.session.commit()
             
-            # Now add checklist items
-            for i, item_form in enumerate(form.items):
-                print(f"Processing item {i}: {item_form.description.data}")
+            # Check for items using the request.form directly
+            item_descriptions = []
+            item_required = []
+            item_orders = []
+            
+            # Collect all items from form
+            for key, value in request.form.items():
+                if key.startswith('items-') and key.endswith('-description'):
+                    index = key.split('-')[1]
+                    item_descriptions.append((int(index), value))
+                elif key.startswith('items-') and key.endswith('-is_required'):
+                    index = key.split('-')[1]
+                    item_required.append((int(index), True))
+                elif key.startswith('items-') and key.endswith('-order'):
+                    index = key.split('-')[1]
+                    item_orders.append((int(index), int(value)))
+            
+            # Sort items by index
+            item_descriptions.sort(key=lambda x: x[0])
+            
+            # Create checklist items
+            for i, (_, description) in enumerate(item_descriptions):
+                # Find required value for this index
+                is_required = True  # Default to True
+                for idx, req in item_required:
+                    if idx == i:
+                        is_required = req
+                        break
+                
+                print(f"Processing item {i}: {description}, Required: {is_required}")
+                
                 item = ChecklistItem(
                     template_id=checklist.id,
-                    description=item_form.description.data,
-                    is_required=item_form.is_required.data,
+                    description=description,
+                    is_required=is_required,
                     order=i+1
                 )
                 db.session.add(item)
@@ -244,12 +272,41 @@ def edit_checklist(checklist_id):
         # Delete existing items
         ChecklistItem.query.filter_by(template_id=checklist.id).delete()
         
-        # Add updated items
-        for i, item_form in enumerate(form.items):
+        # Check for items using the request.form directly
+        item_descriptions = []
+        item_required = []
+        item_orders = []
+        
+        # Collect all items from form
+        for key, value in request.form.items():
+            if key.startswith('items-') and key.endswith('-description'):
+                index = key.split('-')[1]
+                item_descriptions.append((int(index), value))
+            elif key.startswith('items-') and key.endswith('-is_required'):
+                index = key.split('-')[1]
+                item_required.append((int(index), True))
+            elif key.startswith('items-') and key.endswith('-order'):
+                index = key.split('-')[1]
+                item_orders.append((int(index), int(value)))
+        
+        # Sort items by index
+        item_descriptions.sort(key=lambda x: x[0])
+        
+        # Create checklist items
+        for i, (_, description) in enumerate(item_descriptions):
+            # Find required value for this index
+            is_required = True  # Default to True
+            for idx, req in item_required:
+                if idx == i:
+                    is_required = req
+                    break
+            
+            print(f"Processing item {i}: {description}, Required: {is_required}")
+            
             item = ChecklistItem(
                 template_id=checklist.id,
-                description=item_form.description.data,
-                is_required=item_form.is_required.data,
+                description=description,
+                is_required=is_required,
                 order=i+1
             )
             db.session.add(item)

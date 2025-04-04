@@ -3,22 +3,22 @@
 {% block content %}
 <div class="row mb-4">
     <div class="col">
-        <h2 class="border-bottom pb-2"><i class="fas fa-edit me-2"></i>Edit Checklist Template</h2>
+        <h2 class="border-bottom pb-2"><i class="fas fa-edit me-2"></i>Editar Modelo de Checklist</h2>
     </div>
 </div>
 
 <div class="row">
     <div class="col-lg-8 mx-auto">
         <div class="card shadow">
-            <div class="card-header bg-warning text-dark">
-                <h5 class="mb-0"><i class="fas fa-clipboard-list me-2"></i>Checklist Template Details</h5>
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0"><i class="fas fa-clipboard-list me-2"></i>Detalhes do Modelo de Checklist</h5>
             </div>
             <div class="card-body">
                 <form method="POST" action="{{ url_for('maintenance.edit_checklist', checklist_id=checklist.id) }}" id="checklistForm">
                     {{ form.hidden_tag() }}
                     
                     <div class="mb-3">
-                        <label for="{{ form.maintenance_plan_id.id }}" class="form-label">Maintenance Plan *</label>
+                        <label for="{{ form.maintenance_plan_id.id }}" class="form-label">Plano de Manutenção *</label>
                         {{ form.maintenance_plan_id(class="form-select") }}
                         {% if form.maintenance_plan_id.errors %}
                             {% for error in form.maintenance_plan_id.errors %}
@@ -28,7 +28,7 @@
                     </div>
                     
                     <div class="mb-3">
-                        <label for="{{ form.name.id }}" class="form-label">Template Name *</label>
+                        <label for="{{ form.name.id }}" class="form-label">Nome do Modelo *</label>
                         {{ form.name(class="form-control") }}
                         {% if form.name.errors %}
                             {% for error in form.name.errors %}
@@ -38,7 +38,7 @@
                     </div>
                     
                     <div class="mb-3">
-                        <label for="{{ form.description.id }}" class="form-label">Description</label>
+                        <label for="{{ form.description.id }}" class="form-label">Descrição</label>
                         {{ form.description(class="form-control", rows=3) }}
                         {% if form.description.errors %}
                             {% for error in form.description.errors %}
@@ -47,30 +47,31 @@
                         {% endif %}
                     </div>
                     
-                    <h5 class="border-bottom pb-2 mt-4">Checklist Items</h5>
+                    <h5 class="border-bottom pb-2 mt-4">Itens do Checklist</h5>
                     <div class="alert alert-info mb-3">
-                        <i class="fas fa-info-circle me-2"></i>Edit tasks that should be performed during this maintenance. You can mark items as required or optional.
+                        <i class="fas fa-info-circle me-2"></i>Adicione tarefas que devem ser realizadas durante esta manutenção. Você pode marcar itens como obrigatórios ou opcionais.
                     </div>
                     
                     <div id="items-container">
-                        {% for item_form in form.items %}
+                        {% for i in range(form.items|length) %}
                             <div class="card mb-3 item-card">
                                 <div class="card-body">
                                     <div class="row">
                                         <div class="col-md-9">
-                                            <label for="{{ item_form.description.id }}" class="form-label">Task Description *</label>
-                                            {{ item_form.description(class="form-control") }}
-                                            {{ item_form.order(value=loop.index) }}
+                                            <label class="form-label">Descrição da Tarefa *</label>
+                                            <input class="form-control" id="items-{{ i }}-description" name="items-{{ i }}-description" required type="text" value="{{ form.items[i].description.data or '' }}">
+                                            <input id="items-{{ i }}-order" name="items-{{ i }}-order" type="hidden" value="{{ i+1 }}">
+                                            <input type="hidden" name="items-{{ i }}-csrf_token" value="{{ csrf_token() }}">
                                         </div>
                                         <div class="col-md-2">
-                                            <label class="form-label d-block">Required</label>
+                                            <label class="form-label d-block">Obrigatório</label>
                                             <div class="form-check form-switch">
-                                                {{ item_form.is_required(class="form-check-input") }}
-                                                <label class="form-check-label" for="{{ item_form.is_required.id }}">Yes</label>
+                                                <input class="form-check-input" id="items-{{ i }}-is_required" name="items-{{ i }}-is_required" {% if form.items[i].is_required.data %}checked{% endif %} type="checkbox" value="y">
+                                                <label class="form-check-label" for="items-{{ i }}-is_required">Sim</label>
                                             </div>
                                         </div>
                                         <div class="col-md-1 d-flex align-items-end">
-                                            <button type="button" class="btn btn-danger remove-item" {% if loop.index == 1 and form.items|length == 1 %}disabled{% endif %}>
+                                            <button type="button" class="btn btn-danger remove-item" {% if i == 0 and form.items|length == 1 %}disabled{% endif %}>
                                                 <i class="fas fa-times"></i>
                                             </button>
                                         </div>
@@ -82,13 +83,13 @@
                     
                     <div class="mb-4">
                         <button type="button" id="add-item-btn" class="btn btn-success">
-                            <i class="fas fa-plus me-1"></i>Add Item
+                            <i class="fas fa-plus me-1"></i>Adicionar Item
                         </button>
                     </div>
                     
                     <div class="d-flex justify-content-between">
-                        <a href="{{ url_for('maintenance.checklists') }}" class="btn btn-secondary">Cancel</a>
-                        {{ form.submit(class="btn btn-warning") }}
+                        <a href="{{ url_for('maintenance.checklists') }}" class="btn btn-secondary">Cancelar</a>
+                        {{ form.submit(class="btn btn-primary") }}
                     </div>
                 </form>
             </div>
@@ -102,6 +103,7 @@
     document.addEventListener('DOMContentLoaded', function() {
         const itemsContainer = document.getElementById('items-container');
         const addItemBtn = document.getElementById('add-item-btn');
+        const csrf_token = document.querySelector('input[name="csrf_token"]').value;
         
         // Function to get the template for a new item
         function getItemTemplate(index) {
@@ -110,15 +112,16 @@
                     <div class="card-body">
                         <div class="row">
                             <div class="col-md-9">
-                                <label class="form-label">Task Description *</label>
+                                <label class="form-label">Descrição da Tarefa *</label>
                                 <input class="form-control" id="items-${index}-description" name="items-${index}-description" required type="text">
                                 <input id="items-${index}-order" name="items-${index}-order" type="hidden" value="${index+1}">
+                                <input type="hidden" name="items-${index}-csrf_token" value="${csrf_token}">
                             </div>
                             <div class="col-md-2">
-                                <label class="form-label d-block">Required</label>
+                                <label class="form-label d-block">Obrigatório</label>
                                 <div class="form-check form-switch">
                                     <input class="form-check-input" id="items-${index}-is_required" name="items-${index}-is_required" checked type="checkbox" value="y">
-                                    <label class="form-check-label" for="items-${index}-is_required">Yes</label>
+                                    <label class="form-check-label" for="items-${index}-is_required">Sim</label>
                                 </div>
                             </div>
                             <div class="col-md-1 d-flex align-items-end">
@@ -180,6 +183,19 @@
                 });
             }
         }
+
+        // Add CSRF token to any existing items that may not have it
+        document.querySelectorAll('.item-card').forEach((item, index) => {
+            const hasToken = item.querySelector('input[name$="-csrf_token"]');
+            if (!hasToken) {
+                const descInput = item.querySelector('input[name$="-description"]');
+                const tokenInput = document.createElement('input');
+                tokenInput.type = 'hidden';
+                tokenInput.name = `items-${index}-csrf_token`;
+                tokenInput.value = csrf_token;
+                descInput.parentNode.insertBefore(tokenInput, descInput.nextSibling);
+            }
+        });
     });
 </script>
 {% endblock %}

@@ -73,7 +73,6 @@ class ChecklistTemplateForm(FlaskForm):
     name = StringField('Nome do Modelo', validators=[DataRequired()])
     description = TextAreaField('Descrição', validators=[Optional()])
     items = FieldList(FormField(ChecklistItemForm), min_entries=1)
-    add_item = SubmitField('Adicionar Item')
     submit = SubmitField('Enviar')
 
 class MaintenanceScheduleForm(FlaskForm):
