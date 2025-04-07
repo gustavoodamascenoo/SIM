@@ -58,8 +58,8 @@
                 <div class="row mb-4">
                     <div class="col-12">
                         <h5 class="border-bottom pb-2 mb-3">Conteúdo</h5>
-                        <div class="bg-light p-3 rounded">
-                            {{ registro.conteudo | nl2br }}
+                        <div class="p-3 rounded border" style="background-color: var(--bs-dark-bg-subtle);">
+                            {{ registro.conteudo | nl2br | safe }}
                         </div>
                     </div>
                 </div>
