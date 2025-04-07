@@ -518,8 +518,10 @@ def perform_maintenance(schedule_id):
         from datetime import datetime
         form.start_time.data = datetime.now()
         form.end_time.data = None
+        form.status.data = 'in_progress'
         
         # Adicionar entradas de formulário para cada item do checklist
+        form.checklist_results = []
         for item in checklist_items:
             form.checklist_results.append_entry({
                 'checklist_item_id': item.id,
@@ -527,7 +529,7 @@ def perform_maintenance(schedule_id):
                 'notes': ''
             })
     
-    if form.validate_on_submit():
+    if request.method == 'POST':
         # Criar o registro de manutenção
         record = MaintenanceRecord(
             equipment_id=form.equipment_id.data,
