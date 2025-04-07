@@ -516,7 +516,8 @@ def perform_maintenance(schedule_id):
     
     if request.method == 'GET':
         from datetime import datetime
-        form.start_time.data = datetime.utcnow()
+        form.start_time.data = datetime.now()
+        form.end_time.data = None
         
         # Adicionar entradas de formulário para cada item do checklist
         for item in checklist_items:
