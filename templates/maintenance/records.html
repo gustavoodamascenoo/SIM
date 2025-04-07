@@ -80,9 +80,16 @@
                                 {% endif %}
                             </td>
                             <td>
-                                <a href="{{ url_for('maintenance.view_record', record_id=record.id) }}" class="btn btn-sm btn-info" title="Ver Detalhes">
-                                    <i class="fas fa-eye"></i>
-                                </a>
+                                <div class="btn-group">
+                                    <a href="{{ url_for('maintenance.view_record', record_id=record.id) }}" class="btn btn-sm btn-info" title="Ver Detalhes">
+                                        <i class="fas fa-eye"></i>
+                                    </a>
+                                    {% if record.schedule_id %}
+                                    <a href="{{ url_for('maintenance.view_schedule', schedule_id=record.schedule_id) }}" class="btn btn-sm btn-primary" title="Ver Agendamento">
+                                        <i class="fas fa-calendar-alt"></i>
+                                    </a>
+                                    {% endif %}
+                                </div>
                                 {% if record.schedule_id %}
                                 <a href="{{ url_for('maintenance.view_schedule', schedule_id=record.schedule_id) }}" class="btn btn-sm btn-primary" title="Ver Agendamento">
                                     <i class="fas fa-calendar-alt"></i>
