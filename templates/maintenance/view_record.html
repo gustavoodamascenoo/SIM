@@ -161,7 +161,7 @@
                     <a href="{{ url_for('equipment.view', equipment_id=record.equipment.id) }}" class="btn btn-sm btn-outline-info">Ver Equipamento</a>
                 </div>
                 
-                {% set other_records = record.equipment.maintenance_records|rejectattr('id', 'equalto', record.id)|sort(attribute='start_time', reverse=true)[:5] %}
+                {% set other_records = (record.equipment.maintenance_records|rejectattr('id', 'equalto', record.id)|sort(attribute='start_time', reverse=true))[:5] %}
                 
                 {% if other_records %}
                     <div class="list-group">
