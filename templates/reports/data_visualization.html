@@ -4,26 +4,26 @@
 <div class="row mb-4">
     <div class="col">
         <div class="d-flex justify-content-between align-items-center">
-            <h2 class="border-bottom pb-2"><i class="fas fa-chart-pie me-2"></i>Data Visualization Dashboard</h2>
+            <h2 class="border-bottom pb-2"><i class="fas fa-chart-pie me-2"></i>Painel de Visualização de Dados</h2>
             <a href="{{ url_for('reports.index') }}" class="btn btn-secondary">
-                <i class="fas fa-arrow-left me-1"></i>Back to Reports
+                <i class="fas fa-arrow-left me-1"></i>Voltar para Relatórios
             </a>
         </div>
     </div>
 </div>
 
 <div class="alert alert-info mb-4">
-    <i class="fas fa-info-circle me-2"></i><strong>Date Range:</strong> {{ start_date.strftime('%Y-%m-%d') }} to {{ end_date.strftime('%Y-%m-%d') }}
+    <i class="fas fa-info-circle me-2"></i><strong>Período:</strong> {{ start_date.strftime('%d/%m/%Y') }} a {{ end_date.strftime('%d/%m/%Y') }}
 </div>
 
 <div class="row mb-4">
     <div class="col-md-6">
         <div class="card shadow h-100">
             <div class="card-header bg-primary text-white">
-                <h5 class="mb-0"><i class="fas fa-pie-chart me-2"></i>Equipment Status Distribution</h5>
+                <h5 class="mb-0"><i class="fas fa-pie-chart me-2"></i>Distribuição de Status dos Equipamentos</h5>
             </div>
             <div class="card-body">
-                <img src="{{ status_chart }}" class="img-fluid" alt="Equipment Status Distribution">
+                <img src="{{ status_chart }}" class="img-fluid" alt="Distribuição de Status dos Equipamentos">
             </div>
         </div>
     </div>
@@ -31,10 +31,10 @@
     <div class="col-md-6">
         <div class="card shadow h-100">
             <div class="card-header bg-success text-white">
-                <h5 class="mb-0"><i class="fas fa-industry me-2"></i>Equipment by Manufacturer</h5>
+                <h5 class="mb-0"><i class="fas fa-industry me-2"></i>Equipamentos por Fabricante</h5>
             </div>
             <div class="card-body">
-                <img src="{{ manufacturer_chart }}" class="img-fluid" alt="Equipment by Manufacturer">
+                <img src="{{ manufacturer_chart }}" class="img-fluid" alt="Equipamentos por Fabricante">
             </div>
         </div>
     </div>
@@ -44,10 +44,10 @@
     <div class="col">
         <div class="card shadow">
             <div class="card-header bg-warning text-dark">
-                <h5 class="mb-0"><i class="fas fa-chart-line me-2"></i>Maintenance Activities Timeline</h5>
+                <h5 class="mb-0"><i class="fas fa-chart-line me-2"></i>Linha do Tempo de Atividades de Manutenção</h5>
             </div>
             <div class="card-body">
-                <img src="{{ timeline_chart }}" class="img-fluid" alt="Maintenance Timeline">
+                <img src="{{ timeline_chart }}" class="img-fluid" alt="Linha do Tempo de Manutenção">
             </div>
         </div>
     </div>
@@ -57,10 +57,10 @@
     <div class="col">
         <div class="card shadow">
             <div class="card-header bg-info text-white">
-                <h5 class="mb-0"><i class="fas fa-chart-bar me-2"></i>Technician Performance</h5>
+                <h5 class="mb-0"><i class="fas fa-chart-bar me-2"></i>Desempenho dos Técnicos</h5>
             </div>
             <div class="card-body">
-                <img src="{{ technician_chart }}" class="img-fluid" alt="Technician Performance">
+                <img src="{{ technician_chart }}" class="img-fluid" alt="Desempenho dos Técnicos">
             </div>
         </div>
     </div>
@@ -70,30 +70,30 @@
     <div class="col-md-6">
         <div class="card shadow">
             <div class="card-header bg-danger text-white">
-                <h5 class="mb-0"><i class="fas fa-download me-2"></i>Export Options</h5>
+                <h5 class="mb-0"><i class="fas fa-download me-2"></i>Opções de Exportação</h5>
             </div>
             <div class="card-body">
                 <div class="list-group">
                     <a href="{{ url_for('reports.export') }}?report_type=maintenance_history&start_date={{ start_date.strftime('%Y-%m-%d') }}&end_date={{ end_date.strftime('%Y-%m-%d') }}" class="list-group-item list-group-item-action">
                         <div class="d-flex w-100 justify-content-between">
-                            <h5 class="mb-1"><i class="fas fa-history me-2"></i>Maintenance History</h5>
+                            <h5 class="mb-1"><i class="fas fa-history me-2"></i>Histórico de Manutenção</h5>
                             <small><i class="fas fa-file-csv"></i></small>
                         </div>
-                        <p class="mb-1">Export complete maintenance history for the selected period</p>
+                        <p class="mb-1">Exportar histórico completo de manutenção para o período selecionado</p>
                     </a>
                     <a href="{{ url_for('reports.export') }}?report_type=equipment_status" class="list-group-item list-group-item-action">
                         <div class="d-flex w-100 justify-content-between">
-                            <h5 class="mb-1"><i class="fas fa-snowflake me-2"></i>Equipment Status</h5>
+                            <h5 class="mb-1"><i class="fas fa-snowflake me-2"></i>Status dos Equipamentos</h5>
                             <small><i class="fas fa-file-csv"></i></small>
                         </div>
-                        <p class="mb-1">Export current status of all equipment</p>
+                        <p class="mb-1">Exportar status atual de todos os equipamentos</p>
                     </a>
                     <a href="{{ url_for('reports.export') }}?report_type=technician_performance&start_date={{ start_date.strftime('%Y-%m-%d') }}&end_date={{ end_date.strftime('%Y-%m-%d') }}" class="list-group-item list-group-item-action">
                         <div class="d-flex w-100 justify-content-between">
-                            <h5 class="mb-1"><i class="fas fa-users me-2"></i>Technician Performance</h5>
+                            <h5 class="mb-1"><i class="fas fa-users me-2"></i>Desempenho dos Técnicos</h5>
                             <small><i class="fas fa-file-csv"></i></small>
                         </div>
-                        <p class="mb-1">Export technician performance metrics for the selected period</p>
+                        <p class="mb-1">Exportar métricas de desempenho dos técnicos para o período selecionado</p>
                     </a>
                 </div>
             </div>
@@ -103,33 +103,33 @@
     <div class="col-md-6">
         <div class="card shadow">
             <div class="card-header bg-secondary text-white">
-                <h5 class="mb-0"><i class="fas fa-lightbulb me-2"></i>Insights & Recommendations</h5>
+                <h5 class="mb-0"><i class="fas fa-lightbulb me-2"></i>Insights & Recomendações</h5>
             </div>
             <div class="card-body">
                 <div class="alert alert-success mb-3">
-                    <h6 class="alert-heading"><i class="fas fa-check-circle me-2"></i>Positive Findings</h6>
+                    <h6 class="alert-heading"><i class="fas fa-check-circle me-2"></i>Pontos Positivos</h6>
                     <ul class="mb-0">
-                        <li>Active equipment rate is {{ (status_counts.active / (status_counts.active + status_counts.maintenance + status_counts.inactive) * 100)|round|int }}% - a good utilization rate</li>
-                        <li>Recent maintenance activities show consistent care of equipment</li>
-                        <li>Technician efficiency is improving over time</li>
+                        <li>Taxa de equipamentos ativos é {{ (status_counts.active / (status_counts.active + status_counts.maintenance + status_counts.inactive) * 100)|round|int }}% - uma boa taxa de utilização</li>
+                        <li>Atividades recentes de manutenção mostram cuidado consistente com os equipamentos</li>
+                        <li>A eficiência dos técnicos está melhorando com o tempo</li>
                     </ul>
                 </div>
                 
                 <div class="alert alert-warning mb-3">
-                    <h6 class="alert-heading"><i class="fas fa-exclamation-triangle me-2"></i>Areas for Improvement</h6>
+                    <h6 class="alert-heading"><i class="fas fa-exclamation-triangle me-2"></i>Áreas para Melhoria</h6>
                     <ul class="mb-0">
-                        <li>{{ needs_maintenance|length if needs_maintenance else 0 }} equipment units need maintenance soon</li>
-                        <li>Consider more regular maintenance for heavily used equipment</li>
-                        <li>Balance workload among technicians more evenly</li>
+                        <li>{{ needs_maintenance|length if needs_maintenance else 0 }} equipamentos precisam de manutenção em breve</li>
+                        <li>Considere manutenção mais regular para equipamentos muito utilizados</li>
+                        <li>Equilibre a carga de trabalho entre os técnicos de forma mais uniforme</li>
                     </ul>
                 </div>
                 
                 <div class="alert alert-info mb-0">
-                    <h6 class="alert-heading"><i class="fas fa-info-circle me-2"></i>Next Steps</h6>
+                    <h6 class="alert-heading"><i class="fas fa-info-circle me-2"></i>Próximos Passos</h6>
                     <ul class="mb-0">
-                        <li>Schedule maintenance for equipment that hasn't been serviced in 30+ days</li>
-                        <li>Review maintenance plans for equipment with recurring issues</li>
-                        <li>Provide additional training for technicians with longer average maintenance durations</li>
+                        <li>Agendar manutenção para equipamentos que não receberam serviço nos últimos 30+ dias</li>
+                        <li>Revisar planos de manutenção para equipamentos com problemas recorrentes</li>
+                        <li>Fornecer treinamento adicional para técnicos com durações médias de manutenção mais longas</li>
                     </ul>
                 </div>
             </div>
