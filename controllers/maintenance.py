@@ -531,13 +531,14 @@ def perform_maintenance(schedule_id):
                 'notes': ''
             })
     
-    if request.method == 'POST':
+    if request.method == 'POST' and form.validate():
+        from datetime import datetime
         # Criar o registro de manutenção
         record = MaintenanceRecord(
             equipment_id=form.equipment_id.data,
             technician_id=current_user.id,
             schedule_id=form.schedule_id.data,
-            start_time=form.start_time.data,
+            start_time=datetime.now() if not form.start_time.data else form.start_time.data,
             end_time=form.end_time.data if form.status.data == 'completed' else None,
             status=form.status.data,
             notes=form.notes.data,
