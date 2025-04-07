@@ -78,7 +78,8 @@
                         <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="notificationsDropdown" style="min-width: 300px;">
                             <li><h6 class="dropdown-header">Notificações</h6></li>
                             {% if current_user.notifications %}
-                                {% for notification in current_user.notifications|sort(attribute='created_at', reverse=true)|slice(0, 5) %}
+                                {% set notifications_sorted = current_user.notifications|sort(attribute='created_at', reverse=true) %}
+                                {% for notification in notifications_sorted if loop.index <= 5 %}
                                 <li>
                                     <a class="dropdown-item {% if not notification.read %}fw-bold{% endif %}" href="{{ url_for('maintenance.view_schedule', schedule_id=notification.schedule_id) if notification.schedule_id else '#' }}">
                                         <small class="text-muted">{{ notification.created_at.strftime('%Y-%m-%d %H:%M') }}</small><br>
@@ -86,7 +87,7 @@
                                         <small>{{ notification.message }}</small>
                                     </a>
                                 </li>
-                                {% if not loop.last %}<li><hr class="dropdown-divider"></li>{% endif %}
+                                {% if not loop.last and loop.index < 5 %}<li><hr class="dropdown-divider"></li>{% endif %}
                                 {% endfor %}
                                 <li><hr class="dropdown-divider"></li>
                                 <li><a class="dropdown-item text-center" href="{{ url_for('maintenance.notifications') }}">Ver Todas</a></li>
