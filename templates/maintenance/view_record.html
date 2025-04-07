@@ -5,16 +5,16 @@
     <div class="col">
         <div class="d-flex justify-content-between align-items-center">
             <h2 class="border-bottom pb-2">
-                <i class="fas fa-clipboard-check me-2"></i>Maintenance Record
+                <i class="fas fa-clipboard-check me-2"></i>Registro de Manutenção
             </h2>
             <div>
                 {% if record.schedule %}
                 <a href="{{ url_for('maintenance.view_schedule', schedule_id=record.schedule.id) }}" class="btn btn-info me-2">
-                    <i class="fas fa-calendar-alt me-1"></i>View Schedule
+                    <i class="fas fa-calendar-alt me-1"></i>Ver Agendamento
                 </a>
                 {% endif %}
                 <a href="{{ url_for('maintenance.records') }}" class="btn btn-secondary">
-                    <i class="fas fa-arrow-left me-1"></i>Back to Records
+                    <i class="fas fa-arrow-left me-1"></i>Voltar aos Registros
                 </a>
             </div>
         </div>
@@ -25,47 +25,47 @@
     <div class="col-lg-8">
         <div class="card shadow mb-4">
             <div class="card-header bg-primary text-white">
-                <h5 class="mb-0"><i class="fas fa-info-circle me-2"></i>Maintenance Details</h5>
+                <h5 class="mb-0"><i class="fas fa-info-circle me-2"></i>Detalhes da Manutenção</h5>
             </div>
             <div class="card-body">
                 <div class="row">
                     <div class="col-md-6">
                         <dl class="row">
-                            <dt class="col-sm-4">Equipment:</dt>
+                            <dt class="col-sm-4">Equipamento:</dt>
                             <dd class="col-sm-8">
                                 <a href="{{ url_for('equipment.view', equipment_id=record.equipment.id) }}">
                                     {{ record.equipment.identification_number }} ({{ record.equipment.model }})
                                 </a>
                             </dd>
                             
-                            <dt class="col-sm-4">Location:</dt>
-                            <dd class="col-sm-8">{{ record.equipment.location_building }}, Floor {{ record.equipment.location_floor }}, {{ record.equipment.location_room }}</dd>
+                            <dt class="col-sm-4">Localização:</dt>
+                            <dd class="col-sm-8">{{ record.equipment.location_building }}, Andar {{ record.equipment.location_floor }}, {{ record.equipment.location_room }}</dd>
                             
-                            <dt class="col-sm-4">Technician:</dt>
+                            <dt class="col-sm-4">Técnico:</dt>
                             <dd class="col-sm-8">{{ record.technician.first_name }} {{ record.technician.last_name }}</dd>
                         </dl>
                     </div>
                     <div class="col-md-6">
                         <dl class="row">
-                            <dt class="col-sm-4">Start Time:</dt>
+                            <dt class="col-sm-4">Hora Início:</dt>
                             <dd class="col-sm-8">{{ record.start_time|format_datetime }}</dd>
                             
-                            <dt class="col-sm-4">End Time:</dt>
-                            <dd class="col-sm-8">{{ record.end_time|format_datetime if record.end_time else 'In Progress' }}</dd>
+                            <dt class="col-sm-4">Hora Término:</dt>
+                            <dd class="col-sm-8">{{ record.end_time|format_datetime if record.end_time else 'Em Andamento' }}</dd>
                             
                             <dt class="col-sm-4">Status:</dt>
                             <dd class="col-sm-8">
                                 <span class="badge bg-{{ 'success' if record.status == 'completed' else 'warning' }}">
-                                    {{ record.status }}
+                                    {{ 'Concluído' if record.status == 'completed' else 'Em Andamento' }}
                                 </span>
                             </dd>
                             
-                            <dt class="col-sm-4">Duration:</dt>
+                            <dt class="col-sm-4">Duração:</dt>
                             <dd class="col-sm-8">
                                 {% if record.end_time %}
-                                    {{ ((record.end_time - record.start_time).total_seconds() / 3600)|round(1) }} hours
+                                    {{ ((record.end_time - record.start_time).total_seconds() / 3600)|round(1) }} horas
                                 {% else %}
-                                    In progress
+                                    Em andamento
                                 {% endif %}
                             </dd>
                         </dl>
@@ -74,22 +74,22 @@
                 
                 {% if record.notes %}
                 <div class="mt-3">
-                    <h6 class="border-bottom pb-2">Notes</h6>
-                    <p>{{ record.notes }}</p>
+                    <h6 class="border-bottom pb-2">Observações</h6>
+                    <p>{{ record.notes|nl2br }}</p>
                 </div>
                 {% endif %}
                 
                 {% if record.issues_found %}
                 <div class="mt-3 alert alert-danger">
-                    <h6 class="alert-heading"><i class="fas fa-exclamation-triangle me-2"></i>Issues Found</h6>
-                    <p class="mb-0">{{ record.issues_found }}</p>
+                    <h6 class="alert-heading"><i class="fas fa-exclamation-triangle me-2"></i>Problemas Encontrados</h6>
+                    <p class="mb-0">{{ record.issues_found|nl2br }}</p>
                 </div>
                 {% endif %}
                 
                 {% if record.actions_taken %}
                 <div class="mt-3 alert alert-success">
-                    <h6 class="alert-heading"><i class="fas fa-tools me-2"></i>Actions Taken</h6>
-                    <p class="mb-0">{{ record.actions_taken }}</p>
+                    <h6 class="alert-heading"><i class="fas fa-tools me-2"></i>Ações Realizadas</h6>
+                    <p class="mb-0">{{ record.actions_taken|nl2br }}</p>
                 </div>
                 {% endif %}
             </div>
@@ -97,7 +97,7 @@
         
         <div class="card shadow mb-4">
             <div class="card-header bg-success text-white">
-                <h5 class="mb-0"><i class="fas fa-tasks me-2"></i>Checklist Results</h5>
+                <h5 class="mb-0"><i class="fas fa-tasks me-2"></i>Resultados do Checklist</h5>
             </div>
             <div class="card-body">
                 {% if checklist_results %}
@@ -105,10 +105,11 @@
                         <table class="table table-striped">
                             <thead>
                                 <tr>
-                                    <th>Task</th>
-                                    <th>Required</th>
+                                    <th>Tarefa</th>
+                                    <th>Obrigatório</th>
                                     <th>Status</th>
-                                    <th>Notes</th>
+                                    <th>Observações</th>
+                                    <th>Arquivo</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -117,15 +118,24 @@
                                     <td>{{ result.checklist_item.description }}</td>
                                     <td>
                                         <span class="badge bg-{{ 'danger' if result.checklist_item.is_required else 'secondary' }}">
-                                            {{ 'Required' if result.checklist_item.is_required else 'Optional' }}
+                                            {{ 'Sim' if result.checklist_item.is_required else 'Não' }}
                                         </span>
                                     </td>
                                     <td>
-                                        <span class="badge bg-{{ 'success' if result.status == 'completed' else ('warning' if result.status == 'pending' else 'secondary') }}">
-                                            {{ result.status }}
+                                        <span class="badge bg-{{ 'success' if result.status == 'ok' else ('danger' if result.status == 'nao_conforme' else 'secondary') }}">
+                                            {{ 'OK' if result.status == 'ok' else ('Não Conforme' if result.status == 'nao_conforme' else 'Não se Aplica') }}
                                         </span>
                                     </td>
-                                    <td>{{ result.notes or 'No notes' }}</td>
+                                    <td>{{ result.notes|nl2br if result.notes else 'Sem observações' }}</td>
+                                    <td>
+                                        {% if result.arquivo_nome %}
+                                            <a href="{{ url_for('maintenance.download_checklist_file', result_id=result.id) }}" class="btn btn-sm btn-outline-primary">
+                                                <i class="fas fa-download me-1"></i>{{ result.arquivo_nome|truncate(15) }}
+                                            </a>
+                                        {% else %}
+                                            <span class="text-muted">Sem arquivo</span>
+                                        {% endif %}
+                                    </td>
                                 </tr>
                                 {% endfor %}
                             </tbody>
@@ -133,7 +143,7 @@
                     </div>
                 {% else %}
                     <div class="alert alert-info">
-                        <i class="fas fa-info-circle me-2"></i>No checklist results recorded for this maintenance activity.
+                        <i class="fas fa-info-circle me-2"></i>Nenhum resultado de checklist registrado para esta atividade de manutenção.
                     </div>
                 {% endif %}
             </div>
@@ -143,12 +153,12 @@
     <div class="col-lg-4">
         <div class="card shadow mb-4">
             <div class="card-header bg-info text-white">
-                <h5 class="mb-0"><i class="fas fa-history me-2"></i>Equipment History</h5>
+                <h5 class="mb-0"><i class="fas fa-history me-2"></i>Histórico do Equipamento</h5>
             </div>
             <div class="card-body">
                 <div class="d-flex justify-content-between align-items-center mb-3">
-                    <h6 class="mb-0">Recent Maintenance</h6>
-                    <a href="{{ url_for('equipment.view', equipment_id=record.equipment.id) }}" class="btn btn-sm btn-outline-info">View Equipment</a>
+                    <h6 class="mb-0">Manutenções Recentes</h6>
+                    <a href="{{ url_for('equipment.view', equipment_id=record.equipment.id) }}" class="btn btn-sm btn-outline-info">Ver Equipamento</a>
                 </div>
                 
                 {% set other_records = record.equipment.maintenance_records|rejectattr('id', 'equalto', record.id)|sort(attribute='start_time', reverse=true)[:5] %}
@@ -160,17 +170,17 @@
                                 <div class="d-flex w-100 justify-content-between">
                                     <h6 class="mb-1">{{ other_record.start_time|format_date }}</h6>
                                     <span class="badge bg-{{ 'success' if other_record.status == 'completed' else 'warning' }}">
-                                        {{ other_record.status }}
+                                        {{ 'Concluído' if other_record.status == 'completed' else 'Em Andamento' }}
                                     </span>
                                 </div>
-                                <p class="mb-1">Technician: {{ other_record.technician.first_name }} {{ other_record.technician.last_name }}</p>
-                                <small>{{ other_record.notes|truncate(50) if other_record.notes else 'No notes' }}</small>
+                                <p class="mb-1">Técnico: {{ other_record.technician.first_name }} {{ other_record.technician.last_name }}</p>
+                                <small>{{ other_record.notes|truncate(50) if other_record.notes else 'Sem observações' }}</small>
                             </a>
                         {% endfor %}
                     </div>
                 {% else %}
                     <div class="alert alert-info">
-                        <i class="fas fa-info-circle me-2"></i>No other maintenance records for this equipment.
+                        <i class="fas fa-info-circle me-2"></i>Nenhum outro registro de manutenção para este equipamento.
                     </div>
                 {% endif %}
             </div>
@@ -178,7 +188,7 @@
         
         <div class="card shadow mb-4">
             <div class="card-header bg-secondary text-white">
-                <h5 class="mb-0"><i class="fas fa-user me-2"></i>Technician Information</h5>
+                <h5 class="mb-0"><i class="fas fa-user me-2"></i>Informações do Técnico</h5>
             </div>
             <div class="card-body">
                 <div class="d-flex align-items-center mb-3">
@@ -193,19 +203,21 @@
                 
                 <ul class="list-group list-group-flush mb-3">
                     <li class="list-group-item d-flex justify-content-between align-items-center">
-                        <span>Phone</span>
+                        <span>Telefone</span>
                         <span>{{ record.technician.phone or 'N/A' }}</span>
                     </li>
                     <li class="list-group-item d-flex justify-content-between align-items-center">
-                        <span>Role</span>
-                        <span class="badge bg-success">{{ record.technician.role }}</span>
+                        <span>Função</span>
+                        <span class="badge bg-success">
+                            {{ 'Técnico' if record.technician.role == 'technician' else ('Supervisor' if record.technician.role == 'supervisor' else 'Administrador') }}
+                        </span>
                     </li>
                 </ul>
                 
                 {% if current_user.is_admin() or current_user.is_supervisor() %}
                 <div class="mt-3">
                     <a href="{{ url_for('reports.technician_performance') }}" class="btn btn-sm btn-outline-secondary w-100">
-                        <i class="fas fa-chart-line me-1"></i>View Technician Performance
+                        <i class="fas fa-chart-line me-1"></i>Ver Desempenho do Técnico
                     </a>
                 </div>
                 {% endif %}
@@ -215,36 +227,36 @@
         {% if record.schedule %}
         <div class="card shadow">
             <div class="card-header bg-warning text-dark">
-                <h5 class="mb-0"><i class="fas fa-calendar-check me-2"></i>Related Schedule</h5>
+                <h5 class="mb-0"><i class="fas fa-calendar-check me-2"></i>Agendamento Relacionado</h5>
             </div>
             <div class="card-body">
                 <ul class="list-group list-group-flush">
                     <li class="list-group-item d-flex justify-content-between align-items-center">
-                        <span>Scheduled Date</span>
+                        <span>Data Agendada</span>
                         <span>{{ record.schedule.scheduled_date|format_datetime }}</span>
                     </li>
                     <li class="list-group-item d-flex justify-content-between align-items-center">
                         <span>Status</span>
                         <span class="badge bg-{{ 'success' if record.schedule.status == 'completed' else ('warning' if record.schedule.status == 'scheduled' else 'secondary') }}">
-                            {{ record.schedule.status }}
+                            {{ 'Concluído' if record.schedule.status == 'completed' else ('Agendado' if record.schedule.status == 'scheduled' else 'Outro') }}
                         </span>
                     </li>
                     <li class="list-group-item d-flex justify-content-between align-items-center">
-                        <span>Maintenance Plan</span>
+                        <span>Plano de Manutenção</span>
                         <span>{{ record.schedule.maintenance_plan.name }}</span>
                     </li>
                 </ul>
                 
                 {% if record.schedule.notes %}
                 <div class="alert alert-secondary mt-3 mb-0">
-                    <h6 class="alert-heading">Schedule Notes</h6>
-                    <p class="mb-0">{{ record.schedule.notes }}</p>
+                    <h6 class="alert-heading">Observações do Agendamento</h6>
+                    <p class="mb-0">{{ record.schedule.notes|nl2br }}</p>
                 </div>
                 {% endif %}
             </div>
             <div class="card-footer">
                 <a href="{{ url_for('maintenance.view_schedule', schedule_id=record.schedule.id) }}" class="btn btn-warning btn-sm w-100">
-                    <i class="fas fa-eye me-1"></i>View Schedule Details
+                    <i class="fas fa-eye me-1"></i>Ver Detalhes do Agendamento
                 </a>
             </div>
         </div>

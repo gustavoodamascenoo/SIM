@@ -5,23 +5,23 @@
     <div class="col">
         <div class="d-flex justify-content-between align-items-center">
             <h2 class="border-bottom pb-2">
-                <i class="fas fa-calendar-alt me-2"></i>Maintenance Schedule
+                <i class="fas fa-calendar-alt me-2"></i>Agendamento de Manutenção
             </h2>
             <div>
                 {% if schedule.status == 'scheduled' %}
-                    {% if current_user.is_technician() %}
+                    {% if current_user.is_technician() or current_user.is_admin() or current_user.is_supervisor() %}
                     <a href="{{ url_for('maintenance.perform_maintenance', schedule_id=schedule.id) }}" class="btn btn-success me-2">
-                        <i class="fas fa-wrench me-1"></i>Perform Maintenance
+                        <i class="fas fa-wrench me-1"></i>Executar Manutenção
                     </a>
                     {% endif %}
                     {% if current_user.is_admin() or current_user.is_supervisor() %}
                     <a href="{{ url_for('maintenance.edit_schedule', schedule_id=schedule.id) }}" class="btn btn-warning me-2">
-                        <i class="fas fa-edit me-1"></i>Edit
+                        <i class="fas fa-edit me-1"></i>Editar
                     </a>
                     {% endif %}
                 {% endif %}
                 <a href="{{ url_for('maintenance.schedule_list') }}" class="btn btn-secondary">
-                    <i class="fas fa-arrow-left me-1"></i>Back
+                    <i class="fas fa-arrow-left me-1"></i>Voltar
                 </a>
             </div>
         </div>
@@ -32,60 +32,60 @@
     <div class="col-lg-8">
         <div class="card shadow mb-4">
             <div class="card-header bg-primary text-white">
-                <h5 class="mb-0"><i class="fas fa-info-circle me-2"></i>Schedule Details</h5>
+                <h5 class="mb-0"><i class="fas fa-info-circle me-2"></i>Detalhes do Agendamento</h5>
             </div>
             <div class="card-body">
                 <div class="row">
                     <div class="col-md-6">
                         <dl class="row">
-                            <dt class="col-sm-4">Scheduled Date:</dt>
+                            <dt class="col-sm-4">Data Agendada:</dt>
                             <dd class="col-sm-8">{{ schedule.scheduled_date|format_datetime }}</dd>
                             
                             <dt class="col-sm-4">Status:</dt>
                             <dd class="col-sm-8">
                                 <span class="badge bg-{{ 'success' if schedule.status == 'completed' else ('warning' if schedule.status == 'scheduled' else 'secondary') }}">
-                                    {{ schedule.status }}
+                                    {{ 'Concluído' if schedule.status == 'completed' else ('Agendado' if schedule.status == 'scheduled' else 'Outro') }}
                                 </span>
                             </dd>
                             
-                            <dt class="col-sm-4">Created:</dt>
+                            <dt class="col-sm-4">Criado em:</dt>
                             <dd class="col-sm-8">{{ schedule.created_at|format_datetime }}</dd>
                         </dl>
                     </div>
                     <div class="col-md-6">
                         <dl class="row">
-                            <dt class="col-sm-4">Equipment:</dt>
+                            <dt class="col-sm-4">Equipamento:</dt>
                             <dd class="col-sm-8">
                                 <a href="{{ url_for('equipment.view', equipment_id=schedule.equipment.id) }}">
                                     {{ schedule.equipment.identification_number }} ({{ schedule.equipment.model }})
                                 </a>
                             </dd>
                             
-                            <dt class="col-sm-4">Maintenance Plan:</dt>
+                            <dt class="col-sm-4">Plano:</dt>
                             <dd class="col-sm-8">
                                 <a href="{{ url_for('maintenance.view_plan', plan_id=schedule.maintenance_plan.id) }}">
                                     {{ schedule.maintenance_plan.name }}
                                 </a>
                             </dd>
                             
-                            <dt class="col-sm-4">Location:</dt>
-                            <dd class="col-sm-8">{{ schedule.equipment.location_building }}, Floor {{ schedule.equipment.location_floor }}, {{ schedule.equipment.location_room }}</dd>
+                            <dt class="col-sm-4">Localização:</dt>
+                            <dd class="col-sm-8">{{ schedule.equipment.location_building }}, Andar {{ schedule.equipment.location_floor }}, {{ schedule.equipment.location_room }}</dd>
                         </dl>
                     </div>
                 </div>
                 
                 {% if schedule.notes %}
                 <div class="mt-3">
-                    <h6 class="border-bottom pb-2">Notes</h6>
-                    <p>{{ schedule.notes }}</p>
+                    <h6 class="border-bottom pb-2">Observações</h6>
+                    <p>{{ schedule.notes|nl2br }}</p>
                 </div>
                 {% endif %}
                 
                 {% if schedule.status == 'completed' and schedule.maintenance_record %}
                 <div class="mt-4">
                     <div class="alert alert-success">
-                        <i class="fas fa-check-circle me-2"></i>Maintenance was completed on {{ schedule.maintenance_record.end_time|format_datetime }} by {{ schedule.maintenance_record.technician.first_name }} {{ schedule.maintenance_record.technician.last_name }}.
-                        <a href="{{ url_for('maintenance.view_record', record_id=schedule.maintenance_record.id) }}" class="alert-link">View maintenance record</a>
+                        <i class="fas fa-check-circle me-2"></i>A manutenção foi concluída em {{ schedule.maintenance_record.end_time|format_datetime }} por {{ schedule.maintenance_record.technician.first_name }} {{ schedule.maintenance_record.technician.last_name }}.
+                        <a href="{{ url_for('maintenance.view_record', record_id=schedule.maintenance_record.id) }}" class="alert-link">Ver registro de manutenção</a>
                     </div>
                 </div>
                 {% endif %}
@@ -94,7 +94,7 @@
         
         <div class="card shadow mb-4">
             <div class="card-header bg-info text-white">
-                <h5 class="mb-0"><i class="fas fa-clipboard-list me-2"></i>Maintenance Checklist</h5>
+                <h5 class="mb-0"><i class="fas fa-clipboard-list me-2"></i>Checklist de Manutenção</h5>
             </div>
             <div class="card-body">
                 {% set templates = schedule.maintenance_plan.checklist_templates %}
@@ -113,14 +113,14 @@
                                             <p class="mb-3">{{ template.description }}</p>
                                         {% endif %}
                                         
-                                        <h6 class="text-muted">Checklist Items:</h6>
+                                        <h6 class="text-muted">Itens do Checklist:</h6>
                                         <ul class="list-group list-group-flush">
                                             {% for item in template.checklist_items|sort(attribute='order') %}
                                                 <li class="list-group-item border-0 py-1 ps-0">
                                                     <i class="fas {{ 'fa-check-square text-success' if item.is_required else 'fa-square text-secondary' }} me-2"></i>
                                                     {{ item.description }}
                                                     {% if not item.is_required %}
-                                                        <span class="badge bg-secondary ms-1">Optional</span>
+                                                        <span class="badge bg-secondary ms-1">Opcional</span>
                                                     {% endif %}
                                                 </li>
                                             {% endfor %}
@@ -132,14 +132,14 @@
                     </div>
                 {% else %}
                     <div class="alert alert-warning">
-                        <i class="fas fa-exclamation-triangle me-2"></i>No checklist templates found for this maintenance plan.
+                        <i class="fas fa-exclamation-triangle me-2"></i>Nenhum modelo de checklist encontrado para este plano de manutenção.
                     </div>
                 {% endif %}
             </div>
-            {% if schedule.status == 'scheduled' and current_user.is_technician() %}
+            {% if schedule.status == 'scheduled' %}
             <div class="card-footer">
                 <a href="{{ url_for('maintenance.perform_maintenance', schedule_id=schedule.id) }}" class="btn btn-success w-100">
-                    <i class="fas fa-wrench me-1"></i>Perform Maintenance
+                    <i class="fas fa-wrench me-1"></i>Executar Manutenção
                 </a>
             </div>
             {% endif %}
@@ -149,7 +149,7 @@
     <div class="col-lg-4">
         <div class="card shadow mb-4">
             <div class="card-header bg-secondary text-white">
-                <h5 class="mb-0"><i class="fas fa-bell me-2"></i>Notifications</h5>
+                <h5 class="mb-0"><i class="fas fa-bell me-2"></i>Notificações</h5>
             </div>
             <div class="card-body">
                 {% if schedule.notifications %}
@@ -161,16 +161,16 @@
                                     <small>{{ notification.created_at|format_datetime }}</small>
                                 </div>
                                 <p class="mb-1">{{ notification.message }}</p>
-                                <small>To: {{ notification.user.first_name }} {{ notification.user.last_name }}</small>
+                                <small>Para: {{ notification.user.first_name }} {{ notification.user.last_name }}</small>
                                 <span class="badge bg-{{ 'success' if notification.read else 'danger' }} float-end">
-                                    {{ 'Read' if notification.read else 'Unread' }}
+                                    {{ 'Lida' if notification.read else 'Não Lida' }}
                                 </span>
                             </div>
                         {% endfor %}
                     </div>
                 {% else %}
                     <div class="alert alert-info">
-                        <i class="fas fa-info-circle me-2"></i>No notifications have been sent for this schedule.
+                        <i class="fas fa-info-circle me-2"></i>Nenhuma notificação foi enviada para este agendamento.
                     </div>
                 {% endif %}
             </div>
@@ -178,7 +178,7 @@
         
         <div class="card shadow mb-4">
             <div class="card-header bg-success text-white">
-                <h5 class="mb-0"><i class="fas fa-calendar me-2"></i>Equipment Maintenance History</h5>
+                <h5 class="mb-0"><i class="fas fa-calendar me-2"></i>Histórico de Manutenção</h5>
             </div>
             <div class="card-body">
                 {% set history = schedule.equipment.maintenance_records|sort(attribute='start_time', reverse=true) %}
@@ -189,22 +189,22 @@
                                 <div class="d-flex w-100 justify-content-between">
                                     <h6 class="mb-1">{{ record.start_time|format_date }}</h6>
                                     <span class="badge bg-{{ 'success' if record.status == 'completed' else 'warning' }}">
-                                        {{ record.status }}
+                                        {{ 'Concluído' if record.status == 'completed' else 'Em Andamento' }}
                                     </span>
                                 </div>
-                                <p class="mb-1">Technician: {{ record.technician.first_name }} {{ record.technician.last_name }}</p>
-                                <small>{{ record.notes|truncate(50) if record.notes else 'No notes' }}</small>
+                                <p class="mb-1">Técnico: {{ record.technician.first_name }} {{ record.technician.last_name }}</p>
+                                <small>{{ record.notes|truncate(50) if record.notes else 'Sem observações' }}</small>
                             </a>
                         {% endfor %}
                     </div>
                     {% if history|length > 5 %}
                         <div class="mt-2 text-center">
-                            <a href="{{ url_for('reports.maintenance_history') }}?equipment_id={{ schedule.equipment.id }}" class="btn btn-outline-success btn-sm">View Full History</a>
+                            <a href="{{ url_for('reports.maintenance_history') }}?equipment_id={{ schedule.equipment.id }}" class="btn btn-outline-success btn-sm">Ver Histórico Completo</a>
                         </div>
                     {% endif %}
                 {% else %}
                     <div class="alert alert-info">
-                        <i class="fas fa-info-circle me-2"></i>No maintenance history found for this equipment.
+                        <i class="fas fa-info-circle me-2"></i>Nenhum histórico de manutenção encontrado para este equipamento.
                     </div>
                 {% endif %}
             </div>

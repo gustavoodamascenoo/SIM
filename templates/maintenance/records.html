@@ -4,70 +4,87 @@
 <div class="row mb-4">
     <div class="col">
         <div class="d-flex justify-content-between align-items-center">
-            <h2 class="border-bottom pb-2"><i class="fas fa-clipboard-check me-2"></i>Maintenance Records</h2>
+            <h2 class="border-bottom pb-2"><i class="fas fa-clipboard-check me-2"></i>Manutenções Realizadas</h2>
             <a href="{{ url_for('maintenance.schedule_list') }}" class="btn btn-primary">
-                <i class="fas fa-calendar-alt me-2"></i>View Schedules
+                <i class="fas fa-calendar-alt me-2"></i>Ver Agendamentos
             </a>
         </div>
     </div>
 </div>
 
-<div class="card shadow">
+<div class="card shadow mb-4">
     <div class="card-header bg-success text-white">
-        <h5 class="mb-0"><i class="fas fa-history me-2"></i>Maintenance History</h5>
+        <h5 class="mb-0"><i class="fas fa-history me-2"></i>Histórico de Manutenções</h5>
     </div>
     <div class="card-body">
+        <!-- Filtros -->
+        <div class="row mb-3">
+            <div class="col-md-6">
+                <div class="btn-group" role="group">
+                    <button type="button" class="btn btn-outline-primary active" data-filter="all">Todos</button>
+                    <button type="button" class="btn btn-outline-success" data-filter="completed">Concluídos</button>
+                    <button type="button" class="btn btn-outline-warning" data-filter="in_progress">Em Andamento</button>
+                </div>
+            </div>
+            <div class="col-md-6 text-end">
+                <div class="input-group w-50 ms-auto">
+                    <input type="text" id="searchRecords" class="form-control" placeholder="Pesquisar...">
+                    <span class="input-group-text"><i class="fas fa-search"></i></span>
+                </div>
+            </div>
+        </div>
+        
         <div class="table-responsive">
-            <table class="table table-striped table-hover">
+            <table class="table table-striped table-hover" id="maintenanceRecordsTable">
                 <thead>
                     <tr>
-                        <th>Date</th>
-                        <th>Equipment</th>
-                        <th>Location</th>
-                        <th>Technician</th>
-                        <th>Duration</th>
+                        <th>Data</th>
+                        <th>Equipamento</th>
+                        <th>Localização</th>
+                        <th>Técnico</th>
+                        <th>Duração</th>
                         <th>Status</th>
-                        <th>Issues</th>
-                        <th>Actions</th>
+                        <th>Problemas</th>
+                        <th>Ações</th>
                     </tr>
                 </thead>
                 <tbody>
                     {% if records %}
                         {% for record in records %}
-                        <tr>
+                        <tr data-status="{{ record.status }}" data-issues="{{ 'yes' if record.issues_found else 'no' }}">
                             <td>{{ record.start_time|format_date }}</td>
                             <td>
                                 <a href="{{ url_for('equipment.view', equipment_id=record.equipment_id) }}">
                                     {{ record.equipment.identification_number }}
                                 </a>
                             </td>
-                            <td>{{ record.equipment.location_building }}, Floor {{ record.equipment.location_floor }}</td>
+                            <td>{{ record.equipment.location_building }}, Andar {{ record.equipment.location_floor }}</td>
                             <td>{{ record.technician.first_name }} {{ record.technician.last_name }}</td>
                             <td>
                                 {% if record.end_time %}
-                                    {{ ((record.end_time - record.start_time).total_seconds() / 3600)|round(1) }} hrs
+                                    {{ ((record.end_time - record.start_time).total_seconds() / 3600)|round(1) }} horas
                                 {% else %}
-                                    In progress
+                                    Em andamento
                                 {% endif %}
                             </td>
                             <td>
                                 <span class="badge bg-{{ 'success' if record.status == 'completed' else 'warning' }}">
-                                    {{ record.status }}
+                                    {{ 'Concluído' if record.status == 'completed' else 'Em Andamento' }}
                                 </span>
                             </td>
                             <td>
                                 {% if record.issues_found %}
-                                    <span class="badge bg-danger">Issues Found</span>
+                                    <span class="badge bg-danger">Problemas Encontrados</span>
                                 {% else %}
-                                    <span class="badge bg-success">No Issues</span>
+                                    <span class="badge bg-success">Sem Problemas</span>
                                 {% endif %}
                             </td>
                             <td>
-                                <a href="{{ url_for('maintenance.view_record', record_id=record.id) }}" class="btn btn-sm btn-info">
+                                <a href="{{ url_for('maintenance.view_record', record_id=record.id) }}" class="btn btn-sm btn-info" title="Ver Detalhes">
                                     <i class="fas fa-eye"></i>
                                 </a>
                                 {% if record.schedule_id %}
-                                <a href="{{ url_for('maintenance.view_schedule', schedule_id=record.schedule_id) }}" class="btn btn-sm btn-primary">
+                                <a href="{{ url_for('maintenance.view_schedule', schedule_id=record.schedule_id) }}" class="btn btn-sm btn-primary" title="Ver Agendamento">
                                     <i class="fas fa-calendar-alt"></i>
                                 </a>
                                 {% endif %}
@@ -75,22 +92,27 @@
                         </tr>
                         {% endfor %}
                     {% else %}
-                        <tr>
-                            <td colspan="8" class="text-center">No maintenance records found.</td>
+                        <tr id="noRecordsRow">
+                            <td colspan="8" class="text-center">Nenhum registro de manutenção encontrado.</td>
                         </tr>
                     {% endif %}
                 </tbody>
             </table>
         </div>
+        
+        <!-- Mensagem para quando não houver resultados na filtragem -->
+        <div id="noFilterResults" class="alert alert-info text-center d-none">
+            <i class="fas fa-info-circle me-2"></i>Nenhum registro encontrado com os filtros atuais.
+        </div>
     </div>
 </div>
 
 {% if current_user.is_admin() or current_user.is_supervisor() %}
-<div class="row mt-4">
+<div class="row">
     <div class="col">
         <div class="card shadow">
             <div class="card-header bg-info text-white">
-                <h5 class="mb-0"><i class="fas fa-chart-bar me-2"></i>Statistics</h5>
+                <h5 class="mb-0"><i class="fas fa-chart-bar me-2"></i>Estatísticas</h5>
             </div>
             <div class="card-body">
                 <div class="row">
@@ -98,7 +120,7 @@
                         <div class="card text-center">
                             <div class="card-body">
                                 <h3 class="text-success">{{ records|selectattr('status', 'equalto', 'completed')|list|length }}</h3>
-                                <p class="mb-0">Completed</p>
+                                <p class="mb-0">Concluídos</p>
                             </div>
                         </div>
                     </div>
@@ -106,7 +128,7 @@
                         <div class="card text-center">
                             <div class="card-body">
                                 <h3 class="text-warning">{{ records|selectattr('status', 'equalto', 'in_progress')|list|length }}</h3>
-                                <p class="mb-0">In Progress</p>
+                                <p class="mb-0">Em Andamento</p>
                             </div>
                         </div>
                     </div>
@@ -114,7 +136,7 @@
                         <div class="card text-center">
                             <div class="card-body">
                                 <h3 class="text-danger">{{ records|selectattr('issues_found', 'defined')|selectattr('issues_found', 'string')|selectattr('issues_found', 'length')|list|length }}</h3>
-                                <p class="mb-0">Issues Found</p>
+                                <p class="mb-0">Problemas Encontrados</p>
                             </div>
                         </div>
                     </div>
@@ -131,7 +153,7 @@
                                 {% else %}
                                     <h3 class="text-info">0</h3>
                                 {% endif %}
-                                <p class="mb-0">Avg. Hours</p>
+                                <p class="mb-0">Média de Horas</p>
                             </div>
                         </div>
                     </div>
@@ -139,15 +161,15 @@
                 
                 <div class="row mt-3">
                     <div class="col-md-6">
-                        <h6 class="border-bottom pb-2">Recent Trends</h6>
-                        <p><i class="fas fa-info-circle me-2"></i>Maintenance records are being completed efficiently with an average completion time below industry standards.</p>
-                        <p><i class="fas fa-exclamation-triangle me-2"></i>There are equipment items with recurring issues that may need more comprehensive maintenance.</p>
+                        <h6 class="border-bottom pb-2">Tendências Recentes</h6>
+                        <p><i class="fas fa-info-circle me-2"></i>As manutenções estão sendo concluídas eficientemente com um tempo médio de conclusão abaixo dos padrões do setor.</p>
+                        <p><i class="fas fa-exclamation-triangle me-2"></i>Existem equipamentos com problemas recorrentes que podem precisar de manutenção mais abrangente.</p>
                     </div>
                     <div class="col-md-6">
-                        <h6 class="border-bottom pb-2">Recommendations</h6>
-                        <p><i class="fas fa-check-circle me-2"></i>Continue regular maintenance schedule for all equipment.</p>
-                        <p><i class="fas fa-tools me-2"></i>Consider updating the maintenance plan for equipment with recurring issues.</p>
-                        <p><i class="fas fa-chart-line me-2"></i>View <a href="{{ url_for('reports.index') }}">detailed reports</a> for more insights.</p>
+                        <h6 class="border-bottom pb-2">Recomendações</h6>
+                        <p><i class="fas fa-check-circle me-2"></i>Continuar com o cronograma regular de manutenção para todos os equipamentos.</p>
+                        <p><i class="fas fa-tools me-2"></i>Considerar a atualização do plano de manutenção para equipamentos com problemas recorrentes.</p>
+                        <p><i class="fas fa-chart-line me-2"></i>Ver <a href="{{ url_for('reports.index') }}">relatórios detalhados</a> para mais informações.</p>
                     </div>
                 </div>
             </div>
@@ -155,4 +177,57 @@
     </div>
 </div>
 {% endif %}
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Filtros de status
+        const filterButtons = document.querySelectorAll('[data-filter]');
+        const searchInput = document.getElementById('searchRecords');
+        const tableRows = document.querySelectorAll('#maintenanceRecordsTable tbody tr:not(#noRecordsRow)');
+        const noFilterResults = document.getElementById('noFilterResults');
+        
+        // Função para aplicar filtros
+        function applyFilters() {
+            const activeFilter = document.querySelector('[data-filter].active').getAttribute('data-filter');
+            const searchTerm = searchInput.value.toLowerCase();
+            let visibleRows = 0;
+            
+            tableRows.forEach(row => {
+                const status = row.getAttribute('data-status');
+                const rowText = row.textContent.toLowerCase();
+                
+                const matchesFilter = activeFilter === 'all' || status === activeFilter;
+                const matchesSearch = rowText.includes(searchTerm);
+                
+                if (matchesFilter && matchesSearch) {
+                    row.classList.remove('d-none');
+                    visibleRows++;
+                } else {
+                    row.classList.add('d-none');
+                }
+            });
+            
+            // Mostrar mensagem quando não houver resultados
+            if (visibleRows === 0 && tableRows.length > 0) {
+                noFilterResults.classList.remove('d-none');
+            } else {
+                noFilterResults.classList.add('d-none');
+            }
+        }
+        
+        // Event listeners para filtros de botão
+        filterButtons.forEach(button => {
+            button.addEventListener('click', function() {
+                filterButtons.forEach(btn => btn.classList.remove('active'));
+                this.classList.add('active');
+                applyFilters();
+            });
+        });
+        
+        // Event listener para pesquisa
+        searchInput.addEventListener('input', applyFilters);
+    });
+</script>
 {% endblock %}

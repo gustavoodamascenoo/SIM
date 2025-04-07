@@ -485,15 +485,15 @@ def records():
 @maintenance_bp.route('/schedule/<int:schedule_id>/perform', methods=['GET', 'POST'])
 @login_required
 def perform_maintenance(schedule_id):
-    """Perform maintenance on a scheduled item"""
+    """Executar manutenção em um item agendado"""
     schedule = MaintenanceSchedule.query.get_or_404(schedule_id)
     
-    # Check if maintenance is already completed
+    # Verificar se a manutenção já foi concluída
     if schedule.status == 'completed':
         flash('Esta tarefa de manutenção já foi concluída.', 'info')
         return redirect(url_for('maintenance.view_schedule', schedule_id=schedule.id))
     
-    # Get the checklist for this maintenance plan
+    # Obter o modelo de checklist para este plano de manutenção
     checklist_template = ChecklistTemplate.query.filter_by(
         maintenance_plan_id=schedule.maintenance_plan_id
     ).first()
@@ -502,7 +502,7 @@ def perform_maintenance(schedule_id):
         flash('Nenhum modelo de checklist encontrado para este plano de manutenção.', 'warning')
         return redirect(url_for('maintenance.view_schedule', schedule_id=schedule.id))
     
-    # Get checklist items
+    # Obter itens do checklist
     checklist_items = ChecklistItem.query.filter_by(
         template_id=checklist_template.id
     ).order_by(ChecklistItem.order).all()
@@ -514,16 +514,16 @@ def perform_maintenance(schedule_id):
     if request.method == 'GET':
         form.start_time.data = datetime.utcnow()
         
-        # Add form entries for each checklist item
+        # Adicionar entradas de formulário para cada item do checklist
         for item in checklist_items:
             form.checklist_results.append_entry({
                 'checklist_item_id': item.id,
-                'status': 'pending',
+                'status': 'ok',  # Padrão agora é 'ok'
                 'notes': ''
             })
     
     if form.validate_on_submit():
-        # Create the maintenance record
+        # Criar o registro de manutenção
         record = MaintenanceRecord(
             equipment_id=form.equipment_id.data,
             technician_id=current_user.id,
@@ -539,25 +539,38 @@ def perform_maintenance(schedule_id):
         db.session.add(record)
         db.session.commit()
         
-        # Add the checklist results
-        for item_form in form.checklist_results:
+        # Adicionar os resultados do checklist com arquivos
+        for i, item_form in enumerate(form.checklist_results):
+            # Criar o resultado básico do checklist
             result = ChecklistResult(
                 maintenance_record_id=record.id,
                 checklist_item_id=item_form.checklist_item_id.data,
                 status=item_form.status.data,
                 notes=item_form.notes.data
             )
+            
+            # Processar arquivos anexados
+            arquivo = item_form.arquivo.data
+            if arquivo and arquivo.filename:
+                # Lendo os dados do arquivo
+                arquivo_dados = arquivo.read()
+                # Verificando se há conteúdo
+                if arquivo_dados:
+                    result.arquivo_nome = arquivo.filename
+                    result.arquivo_dados = arquivo_dados
+                    result.arquivo_tipo = arquivo.content_type
+            
             db.session.add(result)
         
-        # Update the schedule status if maintenance is completed
+        # Atualizar o status do agendamento se a manutenção foi concluída
         if form.status.data == 'completed':
             schedule.status = 'completed'
             
-            # Update equipment's last maintenance date
+            # Atualizar a data da última manutenção do equipamento
             equipment = Equipment.query.get(schedule.equipment_id)
             equipment.last_maintenance_date = form.end_time.data
             
-            # Create notification for supervisor
+            # Criar notificação para o supervisor
             supervisors = User.query.filter_by(role='supervisor').all()
             for supervisor in supervisors:
                 notification = Notification(
@@ -569,7 +582,7 @@ def perform_maintenance(schedule_id):
                 db.session.add(notification)
         
         db.session.commit()
-        flash('Registro de manutenção foi salvo!', 'success')
+        flash('Registro de manutenção foi salvo com sucesso!', 'success')
         return redirect(url_for('maintenance.records'))
     
     return render_template(
@@ -632,3 +645,32 @@ def mark_all_notifications_read():
     flash('Todas as notificações foram marcadas como lidas.', 'success')
     
     return redirect(url_for('maintenance.notifications'))
+
+# === Download de Arquivos ===
+
+@maintenance_bp.route('/checklist_result/<int:result_id>/download', methods=['GET'])
+@login_required
+def download_checklist_file(result_id):
+    """Download arquivo anexado a um item de checklist"""
+    result = ChecklistResult.query.get_or_404(result_id)
+    
+    # Verificar se o arquivo existe
+    if not result.arquivo_dados or not result.arquivo_nome or not result.arquivo_tipo:
+        flash('Nenhum arquivo encontrado para este item.', 'warning')
+        return redirect(url_for('maintenance.view_record', record_id=result.maintenance_record_id))
+    
+    # Verificar se o usuário tem permissão para acessar este registro
+    record = MaintenanceRecord.query.get(result.maintenance_record_id)
+    if not (current_user.is_admin() or current_user.is_supervisor() or record.technician_id == current_user.id):
+        flash('Você não tem permissão para acessar este arquivo.', 'danger')
+        return redirect(url_for('maintenance.records'))
+    
+    # Preparar o download
+    from io import BytesIO
+    from flask import send_file
+    
+    return send_file(
+        BytesIO(result.arquivo_dados),
+        download_name=result.arquivo_nome,
+        mimetype=result.arquivo_tipo
+    )

@@ -164,8 +164,11 @@ class ChecklistResult(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     maintenance_record_id = db.Column(db.Integer, db.ForeignKey('maintenance_records.id'), nullable=False)
     checklist_item_id = db.Column(db.Integer, db.ForeignKey('checklist_items.id'), nullable=False)
-    status = db.Column(db.String(20), nullable=False)  # completed, pending, not_applicable
+    status = db.Column(db.String(20), nullable=False)  # ok, nao_conforme, nao_se_aplica
     notes = db.Column(db.Text)
+    arquivo_nome = db.Column(db.String(255), nullable=True)  # Nome do arquivo anexado
+    arquivo_dados = db.Column(db.LargeBinary, nullable=True)  # Dados do arquivo binário
+    arquivo_tipo = db.Column(db.String(100), nullable=True)   # Tipo MIME do arquivo
     
     # Relationship to checklist item
     checklist_item = db.relationship('ChecklistItem')

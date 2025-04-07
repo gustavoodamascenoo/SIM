@@ -4,7 +4,7 @@
 <div class="row mb-4">
     <div class="col">
         <div class="d-flex justify-content-between align-items-center">
-            <h2 class="border-bottom pb-2"><i class="fas fa-clipboard-list me-2"></i>Realizar Manutenção</h2>
+            <h2 class="border-bottom pb-2"><i class="fas fa-clipboard-list me-2"></i>Executar Manutenção</h2>
             <a href="{{ url_for('maintenance.view_schedule', schedule_id=schedule.id) }}" class="btn btn-secondary">
                 <i class="fas fa-arrow-left me-1"></i>Voltar ao Agendamento
             </a>
@@ -43,7 +43,7 @@
                     </div>
                 </div>
                 
-                <form method="POST" action="{{ url_for('maintenance.perform_maintenance', schedule_id=schedule.id) }}">
+                <form method="POST" action="{{ url_for('maintenance.perform_maintenance', schedule_id=schedule.id) }}" enctype="multipart/form-data">
                     {{ form.hidden_tag() }}
                     {{ form.equipment_id }}
                     {{ form.schedule_id }}
@@ -127,7 +127,7 @@
                                     
                                     {{ form.checklist_results[i].checklist_item_id(value=item.id) }}
                                     
-                                    <div class="row">
+                                    <div class="row mb-2">
                                         <div class="col-md-4">
                                             <label for="{{ form.checklist_results[i].status.id }}" class="form-label">Status *</label>
                                             {{ form.checklist_results[i].status(class="form-select") }}
@@ -136,6 +136,12 @@
                                             <label for="{{ form.checklist_results[i].notes.id }}" class="form-label">Observações</label>
                                             {{ form.checklist_results[i].notes(class="form-control") }}
                                         </div>
+                                    </div>
+                                    
+                                    <div class="mb-2">
+                                        <label for="{{ form.checklist_results[i].arquivo.id }}" class="form-label">Anexar Arquivo (Opcional)</label>
+                                        {{ form.checklist_results[i].arquivo(class="form-control") }}
+                                        <div class="form-text">Anexe documentos ou imagens relevantes a este item (máx. 5MB)</div>
                                     </div>
                                 </div>
                             {% endfor %}
