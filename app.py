@@ -59,7 +59,7 @@ def nl2br(value):
     """Converte quebras de linha em tags <br>"""
     if not value:
         return ""
-    return value.replace('\n', '<br>')
+    return value.replace('\n', '<br>\n')
 
 with app.app_context():
     # Import models to ensure they're registered with SQLAlchemy

@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="en" data-bs-theme="dark">
+<html lang="pt-BR" data-bs-theme="dark">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AC Maintenance Management System</title>
+    <title>Sistema de Manutenção de AC</title>
     <!-- Bootstrap CSS (Replit Dark Theme) -->
     <link rel="stylesheet" href="https://cdn.replit.com/agent/bootstrap-agent-dark-theme.min.css">
     <!-- Font Awesome for icons -->
@@ -16,7 +16,7 @@
     <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
         <div class="container">
             <a class="navbar-brand" href="{{ url_for('maintenance.dashboard') if current_user.is_authenticated else url_for('users.login') }}">
-                <i class="fas fa-snowflake me-2"></i>AC Maintenance
+                <i class="fas fa-snowflake me-2"></i>Sistema de Manutenção de AC
             </a>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
                 <span class="navbar-toggler-icon"></span>
@@ -25,44 +25,44 @@
                 {% if current_user.is_authenticated %}
                 <ul class="navbar-nav me-auto">
                     <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('maintenance.dashboard') }}">Dashboard</a>
+                        <a class="nav-link" href="{{ url_for('maintenance.dashboard') }}">Painel</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('equipment.index') }}">Equipment</a>
+                        <a class="nav-link" href="{{ url_for('equipment.index') }}">Equipamentos</a>
                     </li>
                     <li class="nav-item dropdown">
                         <a class="nav-link dropdown-toggle" href="#" id="maintenanceDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                            Maintenance
+                            Manutenção
                         </a>
                         <ul class="dropdown-menu" aria-labelledby="maintenanceDropdown">
-                            <li><a class="dropdown-item" href="{{ url_for('maintenance.plans') }}">Maintenance Plans</a></li>
-                            <li><a class="dropdown-item" href="{{ url_for('maintenance.checklists') }}">Checklists</a></li>
-                            <li><a class="dropdown-item" href="{{ url_for('maintenance.schedule_list') }}">Scheduled Maintenance</a></li>
-                            <li><a class="dropdown-item" href="{{ url_for('maintenance.records') }}">Maintenance Records</a></li>
+                            <li><a class="dropdown-item" href="{{ url_for('maintenance.plans') }}">Planos de Manutenção</a></li>
+                            <li><a class="dropdown-item" href="{{ url_for('maintenance.checklists') }}">Listas de Verificação</a></li>
+                            <li><a class="dropdown-item" href="{{ url_for('maintenance.schedule_list') }}">Manutenções Agendadas</a></li>
+                            <li><a class="dropdown-item" href="{{ url_for('maintenance.records') }}">Registros de Manutenção</a></li>
                         </ul>
                     </li>
                     {% if current_user.is_admin() or current_user.is_supervisor() %}
                     <li class="nav-item dropdown">
                         <a class="nav-link dropdown-toggle" href="#" id="reportsDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                            Reports
+                            Relatórios
                         </a>
                         <ul class="dropdown-menu" aria-labelledby="reportsDropdown">
-                            <li><a class="dropdown-item" href="{{ url_for('reports.maintenance_history') }}">Maintenance History</a></li>
-                            <li><a class="dropdown-item" href="{{ url_for('reports.equipment_status') }}">Equipment Status</a></li>
-                            <li><a class="dropdown-item" href="{{ url_for('reports.technician_performance') }}">Technician Performance</a></li>
-                            <li><a class="dropdown-item" href="{{ url_for('reports.data_visualization') }}">Data Visualization</a></li>
-                            <li><a class="dropdown-item" href="{{ url_for('reports.export') }}">Export Data</a></li>
+                            <li><a class="dropdown-item" href="{{ url_for('reports.maintenance_history') }}">Histórico de Manutenção</a></li>
+                            <li><a class="dropdown-item" href="{{ url_for('reports.equipment_status') }}">Status dos Equipamentos</a></li>
+                            <li><a class="dropdown-item" href="{{ url_for('reports.technician_performance') }}">Desempenho dos Técnicos</a></li>
+                            <li><a class="dropdown-item" href="{{ url_for('reports.data_visualization') }}">Visualização de Dados</a></li>
+                            <li><a class="dropdown-item" href="{{ url_for('reports.export') }}">Exportar Dados</a></li>
                         </ul>
                     </li>
                     {% endif %}
                     <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('diario.index') }}"><i class="fas fa-book me-1"></i>Diário de Manutenção</a>
+                        <a class="nav-link" href="{{ url_for('diario.index') }}">Diário de Manutenção</a>
                     </li>
                     <li class="nav-item">
                     </li>
                     {% if current_user.is_admin() %}
                     <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('users.user_list') }}">Users</a>
+                        <a class="nav-link" href="{{ url_for('users.user_list') }}">Usuários</a>
                     </li>
                     {% endif %}
                 </ul>
@@ -76,7 +76,7 @@
                             {% endif %}
                         </a>
                         <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="notificationsDropdown" style="min-width: 300px;">
-                            <li><h6 class="dropdown-header">Notifications</h6></li>
+                            <li><h6 class="dropdown-header">Notificações</h6></li>
                             {% if current_user.notifications %}
                                 {% for notification in current_user.notifications|sort(attribute='created_at', reverse=true)|slice(0, 5) %}
                                 <li>
@@ -89,9 +89,9 @@
                                 {% if not loop.last %}<li><hr class="dropdown-divider"></li>{% endif %}
                                 {% endfor %}
                                 <li><hr class="dropdown-divider"></li>
-                                <li><a class="dropdown-item text-center" href="{{ url_for('maintenance.notifications') }}">View All</a></li>
+                                <li><a class="dropdown-item text-center" href="{{ url_for('maintenance.notifications') }}">Ver Todas</a></li>
                             {% else %}
-                                <li><a class="dropdown-item text-center">No notifications</a></li>
+                                <li><a class="dropdown-item text-center">Sem notificações</a></li>
                             {% endif %}
                         </ul>
                     </li>
@@ -100,9 +100,9 @@
                             <i class="fas fa-user-circle me-1"></i> {{ current_user.username }}
                         </a>
                         <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
-                            <li><a class="dropdown-item" href="{{ url_for('users.profile') }}">Profile</a></li>
+                            <li><a class="dropdown-item" href="{{ url_for('users.profile') }}">Perfil</a></li>
                             <li><hr class="dropdown-divider"></li>
-                            <li><a class="dropdown-item" href="{{ url_for('users.logout') }}">Logout</a></li>
+                            <li><a class="dropdown-item" href="{{ url_for('users.logout') }}">Sair</a></li>
                         </ul>
                     </li>
                 </ul>
@@ -133,7 +133,7 @@
     <!-- Footer -->
     <footer class="footer mt-auto py-3 bg-dark">
         <div class="container text-center">
-            <span class="text-muted">AC Maintenance Management System &copy; 2025</span>
+            <span class="text-muted">Sistema de Manutenção de AC &copy; 2025</span>
         </div>
     </footer>
 
