@@ -212,6 +212,17 @@ def data_visualization():
     technician_chart = generate_technician_chart(technician_performance)
     manufacturer_chart = generate_equipment_manufacturer_chart(equipment_status['manufacturer_counts'])
     
+    # Get equipment needing maintenance soon
+    today = datetime.utcnow()
+    thirty_days_ago = today - timedelta(days=30)
+    
+    equipment_list = Equipment.query.all()
+    needs_maintenance = []
+    for equip in equipment_list:
+        if equip.status != 'inactive':
+            if not equip.last_maintenance_date or equip.last_maintenance_date < thirty_days_ago:
+                needs_maintenance.append(equip)
+    
     return render_template(
         'reports/data_visualization.html',
         status_chart=status_chart,
@@ -219,7 +230,10 @@ def data_visualization():
         technician_chart=technician_chart,
         manufacturer_chart=manufacturer_chart,
         start_date=start_date,
-        end_date=end_date
+        end_date=end_date,
+        status_counts=equipment_status['status_counts'],
+        manufacturer_counts=equipment_status['manufacturer_counts'],
+        needs_maintenance=needs_maintenance
     )
 
 @reports_bp.route('/export', methods=['GET', 'POST'])
