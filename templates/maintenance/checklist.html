@@ -56,7 +56,12 @@
                     <div class="row mb-3">
                         <div class="col-md-6">
                             <label for="{{ form.start_time.id }}" class="form-label">Hora de Início *</label>
-                            {{ form.start_time(class="form-control", type="datetime-local", value=form.start_time.data.strftime('%Y-%m-%dT%H:%M') if form.start_time.data else '') }}
+                            <input type="datetime-local" 
+                                   class="form-control" 
+                                   id="{{ form.start_time.id }}" 
+                                   name="{{ form.start_time.name }}" 
+                                   value="{{ form.start_time.data.strftime('%Y-%m-%dT%H:%M') if form.start_time.data else datetime.now().strftime('%Y-%m-%dT%H:%M') }}" 
+                                   required>
                             {% if form.start_time.errors %}
                                 {% for error in form.start_time.errors %}
                                     <div class="text-danger">{{ error }}</div>
