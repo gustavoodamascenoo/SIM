@@ -137,7 +137,11 @@
                 
                 {% if scheduled_maintenance %}
                     <div class="list-group">
-                        {% for schedule in scheduled_maintenance|sort(attribute='scheduled_date')[:5] %}
+                        {% set first_five_items = scheduled_maintenance|sort(attribute='scheduled_date') %}
+                        {% if first_five_items|length > 5 %}
+                            {% set first_five_items = first_five_items[0:5] %}
+                        {% endif %}
+                        {% for schedule in first_five_items %}
                             <a href="{{ url_for('maintenance.view_schedule', schedule_id=schedule.id) }}" class="list-group-item list-group-item-action">
                                 <div class="d-flex w-100 justify-content-between">
                                     <h6 class="mb-1">{{ schedule.scheduled_date|format_date }}</h6>
@@ -173,7 +177,11 @@
                 
                 {% if maintenance_records %}
                     <div class="list-group">
-                        {% for record in maintenance_records|sort(attribute='start_time', reverse=true)[:5] %}
+                        {% set completed_records = maintenance_records|sort(attribute='start_time', reverse=true) %}
+                        {% if completed_records|length > 5 %}
+                            {% set completed_records = completed_records[0:5] %}
+                        {% endif %}
+                        {% for record in completed_records %}
                             <a href="{{ url_for('maintenance.view_record', record_id=record.id) }}" class="list-group-item list-group-item-action">
                                 <div class="d-flex w-100 justify-content-between">
                                     <h6 class="mb-1">{{ record.start_time|format_date }}</h6>

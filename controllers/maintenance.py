@@ -222,8 +222,8 @@ def add_checklist():
 @login_required
 def view_checklist(checklist_id):
     """View checklist template details"""
-    checklist = ChecklistTemplate.query.get_or_404(checklist_id)
-    return render_template('maintenance/view_checklist.html', checklist=checklist)
+    template = ChecklistTemplate.query.get_or_404(checklist_id)
+    return render_template('maintenance/view_checklist.html', template=template)
 
 @maintenance_bp.route('/checklists/<int:checklist_id>/edit', methods=['GET', 'POST'])
 @login_required
@@ -540,7 +540,7 @@ def perform_maintenance(schedule_id):
         db.session.commit()
         
         # Adicionar os resultados do checklist com arquivos
-        for i, item_form in enumerate(form.checklist_results):
+        for item_form in form.checklist_results:
             # Criar o resultado básico do checklist
             result = ChecklistResult(
                 maintenance_record_id=record.id,
