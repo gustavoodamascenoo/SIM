@@ -515,6 +515,7 @@ def perform_maintenance(schedule_id):
     form.schedule_id.data = schedule.id
     
     if request.method == 'GET':
+        from datetime import datetime
         form.start_time.data = datetime.utcnow()
         
         # Adicionar entradas de formulário para cada item do checklist
@@ -588,13 +589,11 @@ def perform_maintenance(schedule_id):
         flash('Registro de manutenção foi salvo com sucesso!', 'success')
         return redirect(url_for('maintenance.records'))
     
-    from datetime import datetime
     return render_template(
         'maintenance/checklist.html', 
         form=form, 
         schedule=schedule, 
-        checklist_items=checklist_items,
-        datetime=datetime
+        checklist_items=checklist_items
     )
 
 @maintenance_bp.route('/records/<int:record_id>', methods=['GET'])
