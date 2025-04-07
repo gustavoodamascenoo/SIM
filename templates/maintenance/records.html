@@ -142,7 +142,7 @@
                     <div class="col-md-3 mb-3">
                         <div class="card text-center">
                             <div class="card-body">
-                                <h3 class="text-danger">{{ records|selectattr('issues_found', 'defined')|selectattr('issues_found', 'string')|selectattr('issues_found', 'length')|list|length }}</h3>
+                                <h3 class="text-danger">{{ records|selectattr('issues_found')|list|length }}</h3>
                                 <p class="mb-0">Problemas Encontrados</p>
                             </div>
                         </div>
