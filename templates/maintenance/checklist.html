@@ -60,7 +60,7 @@
                                    class="form-control" 
                                    id="{{ form.start_time.id }}" 
                                    name="{{ form.start_time.name }}" 
-                                   value="{{ form.start_time.data.strftime('%Y-%m-%dT%H:%M') if form.start_time.data else '' }}" 
+                                   value="{{ form.start_time.data.strftime('%Y-%m-%dT%H:%M:00') if form.start_time.data else '' }}" 
                                    required>
                             {% if form.start_time.errors %}
                                 {% for error in form.start_time.errors %}
@@ -74,7 +74,7 @@
                                    class="form-control" 
                                    id="{{ form.end_time.id }}" 
                                    name="{{ form.end_time.name }}" 
-                                   value="{{ form.end_time.data.strftime('%Y-%m-%dT%H:%M') if form.end_time.data else '' }}">
+                                   value="{{ form.end_time.data.strftime('%Y-%m-%dT%H:%M:00') if form.end_time.data else '' }}">
                             <small class="form-text text-muted">Deixe em branco se a manutenção ainda estiver em andamento</small>
                             {% if form.end_time.errors %}
                                 {% for error in form.end_time.errors %}
