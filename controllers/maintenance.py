@@ -520,8 +520,10 @@ def perform_maintenance(schedule_id):
         form.end_time.data = None
         form.status.data = 'in_progress'
         
-        # Adicionar entradas de formulário para cada item do checklist
-        form.checklist_results = []
+        # Limpar e adicionar entradas de formulário para cada item do checklist
+        while len(form.checklist_results) > 0:
+            form.checklist_results.pop_entry()
+            
         for item in checklist_items:
             form.checklist_results.append_entry({
                 'checklist_item_id': item.id,
