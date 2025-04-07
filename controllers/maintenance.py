@@ -516,9 +516,8 @@ def perform_maintenance(schedule_id):
     
     if request.method == 'GET':
         from datetime import datetime
-        current_time = datetime.now().replace(microsecond=0)
-        form.start_time.data = current_time
-        form.end_time.data = current_time
+        form.start_time.data = datetime.now()
+        form.end_time.data = None
         form.status.data = 'in_progress'
         
         # Limpar e adicionar entradas de formulário para cada item do checklist

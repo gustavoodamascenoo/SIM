@@ -56,12 +56,7 @@
                     <div class="row mb-3">
                         <div class="col-md-6">
                             <label for="{{ form.start_time.id }}" class="form-label">Hora de Início *</label>
-                            <input type="datetime-local" 
-                                   class="form-control" 
-                                   id="{{ form.start_time.id }}" 
-                                   name="{{ form.start_time.name }}" 
-                                   value="{{ form.start_time.data.strftime('%Y-%m-%dT%H:%M:00') if form.start_time.data else '' }}" 
-                                   required>
+                            {{ form.start_time(class="form-control", type="datetime-local", required=true) }}
                             {% if form.start_time.errors %}
                                 {% for error in form.start_time.errors %}
                                     <div class="text-danger">{{ error }}</div>
@@ -70,11 +65,7 @@
                         </div>
                         <div class="col-md-6">
                             <label for="{{ form.end_time.id }}" class="form-label">Hora de Término</label>
-                            <input type="datetime-local" 
-                                   class="form-control" 
-                                   id="{{ form.end_time.id }}" 
-                                   name="{{ form.end_time.name }}" 
-                                   value="{{ form.end_time.data.strftime('%Y-%m-%dT%H:%M:00') if form.end_time.data else '' }}">
+                            {{ form.end_time(class="form-control", type="datetime-local") }}
                             <small class="form-text text-muted">Deixe em branco se a manutenção ainda estiver em andamento</small>
                             {% if form.end_time.errors %}
                                 {% for error in form.end_time.errors %}
