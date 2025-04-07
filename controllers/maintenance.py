@@ -1,6 +1,9 @@
 from flask import Blueprint, render_template, redirect, url_for, flash, request
 from flask_login import login_required, current_user
 from datetime import datetime, timedelta
+
+# Garantir que datetime está disponível globalmente
+datetime = datetime
 from app import db
 from models import Equipment, MaintenancePlan, ChecklistTemplate, ChecklistItem
 from models import MaintenanceSchedule, MaintenanceRecord, ChecklistResult, Notification, User
