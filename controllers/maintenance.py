@@ -585,11 +585,13 @@ def perform_maintenance(schedule_id):
         flash('Registro de manutenção foi salvo com sucesso!', 'success')
         return redirect(url_for('maintenance.records'))
     
+    from datetime import datetime
     return render_template(
         'maintenance/checklist.html', 
         form=form, 
         schedule=schedule, 
-        checklist_items=checklist_items
+        checklist_items=checklist_items,
+        datetime=datetime
     )
 
 @maintenance_bp.route('/records/<int:record_id>', methods=['GET'])
