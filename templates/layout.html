@@ -79,15 +79,19 @@
                             <li><h6 class="dropdown-header">Notificações</h6></li>
                             {% if current_user.notifications %}
                                 {% set notifications_sorted = current_user.notifications|sort(attribute='created_at', reverse=true) %}
-                                {% for notification in notifications_sorted if loop.index <= 5 %}
-                                <li>
-                                    <a class="dropdown-item {% if not notification.read %}fw-bold{% endif %}" href="{{ url_for('maintenance.view_schedule', schedule_id=notification.schedule_id) if notification.schedule_id else '#' }}">
-                                        <small class="text-muted">{{ notification.created_at.strftime('%Y-%m-%d %H:%M') }}</small><br>
-                                        {{ notification.title }}<br>
-                                        <small>{{ notification.message }}</small>
-                                    </a>
-                                </li>
-                                {% if not loop.last and loop.index < 5 %}<li><hr class="dropdown-divider"></li>{% endif %}
+                                {% set counter = 0 %}
+                                {% for notification in notifications_sorted %}
+                                    {% if counter < 5 %}
+                                        {% set counter = counter + 1 %}
+                                        <li>
+                                            <a class="dropdown-item {% if not notification.read %}fw-bold{% endif %}" href="{{ url_for('maintenance.view_schedule', schedule_id=notification.schedule_id) if notification.schedule_id else '#' }}">
+                                                <small class="text-muted">{{ notification.created_at.strftime('%Y-%m-%d %H:%M') }}</small><br>
+                                                {{ notification.title }}<br>
+                                                <small>{{ notification.message }}</small>
+                                            </a>
+                                        </li>
+                                        {% if not loop.last and counter < 5 %}<li><hr class="dropdown-divider"></li>{% endif %}
+                                    {% endif %}
                                 {% endfor %}
                                 <li><hr class="dropdown-divider"></li>
                                 <li><a class="dropdown-item text-center" href="{{ url_for('maintenance.notifications') }}">Ver Todas</a></li>
