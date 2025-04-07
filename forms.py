@@ -1,4 +1,5 @@
 from flask_wtf import FlaskForm
+from flask_wtf.file import FileField, FileAllowed, FileRequired
 from wtforms import StringField, PasswordField, SubmitField, DateField, FloatField, TextAreaField, SelectField
 from wtforms import BooleanField, IntegerField, DateTimeField, HiddenField, FieldList, FormField
 from wtforms.validators import DataRequired, Email, EqualTo, Length, ValidationError, Optional, NumberRange
@@ -128,3 +129,42 @@ class ExportForm(FlaskForm):
     start_date = DateField('Data Inicial', validators=[DataRequired()])
     end_date = DateField('Data Final', validators=[DataRequired()])
     submit = SubmitField('Exportar para CSV')
+
+# Classes de validação para o arquivo
+class FileSize:
+    """Valida o tamanho do arquivo"""
+    def __init__(self, max_size=5*1024*1024, message=None):
+        self.max_size = max_size
+        self.message = message
+
+    def __call__(self, form, field):
+        if field.data:
+            if hasattr(field.data, 'content_length') and field.data.content_length > self.max_size:
+                raise ValidationError(self.message or f'O arquivo excede o tamanho máximo de {self.max_size/1024/1024:.1f}MB')
+            
+            # Se não tem content_length, tenta ler o conteúdo para verificar o tamanho
+            if hasattr(field.data, 'read') and not hasattr(field.data, 'content_length'):
+                field.data.seek(0, 2)  # Move para o final do arquivo
+                size = field.data.tell()  # Tamanho atual
+                field.data.seek(0)  # Volta ao início
+                if size > self.max_size:
+                    raise ValidationError(self.message or f'O arquivo excede o tamanho máximo de {self.max_size/1024/1024:.1f}MB')
+
+# Formulário para o Diário de Manutenção (Ata)
+class DiarioManutencaoForm(FlaskForm):
+    """
+    Formulário para registrar entradas no Diário de Manutenção.
+    Permite registrar atividades de manutenção com texto e opcionalmente anexar arquivos.
+    """
+    titulo = StringField('Título', validators=[DataRequired(), Length(min=3, max=200)])
+    conteudo = TextAreaField('Conteúdo', validators=[DataRequired()])
+    equipment_id = SelectField('Equipamento (Opcional)', coerce=int, validators=[Optional()])
+    arquivo = FileField('Anexar Arquivo (Opcional)', validators=[
+        Optional(),
+        # Limitando o tamanho do arquivo para 5MB
+        FileSize(max_size=5 * 1024 * 1024, message='O arquivo não pode ser maior que 5MB.'),
+        # Restringindo tipos de arquivo
+        FileAllowed(['pdf', 'jpg', 'jpeg', 'png', 'doc', 'docx', 'xls', 'xlsx', 'txt'], 
+                    'Apenas arquivos PDF, imagens, documentos Office e TXT são permitidos.')
+    ])
+    submit = SubmitField('Salvar')

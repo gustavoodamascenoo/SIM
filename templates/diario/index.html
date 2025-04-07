@@ -1,0 +1,121 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col">
+        <h2 class="border-bottom pb-2">
+            <i class="fas fa-book me-2"></i>Diário de Manutenção (Ata)
+        </h2>
+    </div>
+    <div class="col-auto">
+        <a href="{{ url_for('diario.adicionar') }}" class="btn btn-primary">
+            <i class="fas fa-plus me-2"></i>Nova Entrada
+        </a>
+    </div>
+</div>
+
+{% if registros %}
+    <div class="row">
+        <div class="col-12">
+            <div class="card shadow mb-4">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0"><i class="fas fa-list me-2"></i>Registros do Diário</h5>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-striped mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Data</th>
+                                    <th>Título</th>
+                                    <th>Autor</th>
+                                    <th>Equipamento</th>
+                                    <th>Arquivo</th>
+                                    <th>Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for registro in registros %}
+                                <tr>
+                                    <td>{{ registro.data_criacao | format_datetime }}</td>
+                                    <td>{{ registro.titulo }}</td>
+                                    <td>{{ registro.usuario.first_name }} {{ registro.usuario.last_name }}</td>
+                                    <td>
+                                        {% if registro.equipamento %}
+                                            {{ registro.equipamento.identification_number }} - {{ registro.equipamento.model }}
+                                        {% else %}
+                                            <span class="text-muted">Não especificado</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if registro.arquivo_nome %}
+                                            <a href="{{ url_for('diario.baixar_arquivo', registro_id=registro.id) }}" 
+                                               class="btn btn-sm btn-outline-primary">
+                                                <i class="fas fa-file-download me-1"></i>{{ registro.arquivo_nome }}
+                                            </a>
+                                        {% else %}
+                                            <span class="text-muted">Nenhum arquivo</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <div class="btn-group">
+                                            <a href="{{ url_for('diario.visualizar', registro_id=registro.id) }}" 
+                                               class="btn btn-sm btn-outline-primary" 
+                                               title="Visualizar">
+                                                <i class="fas fa-eye"></i>
+                                            </a>
+                                            
+                                            {% if current_user.id == registro.user_id or current_user.is_admin() %}
+                                            <a href="{{ url_for('diario.editar', registro_id=registro.id) }}" 
+                                               class="btn btn-sm btn-outline-secondary" 
+                                               title="Editar">
+                                                <i class="fas fa-edit"></i>
+                                            </a>
+                                            
+                                            <button type="button" 
+                                                    class="btn btn-sm btn-outline-danger" 
+                                                    data-bs-toggle="modal" 
+                                                    data-bs-target="#deleteModal{{ registro.id }}" 
+                                                    title="Excluir">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
+                                            {% endif %}
+                                        </div>
+                                        
+                                        <!-- Modal de Confirmação para Exclusão -->
+                                        <div class="modal fade" id="deleteModal{{ registro.id }}" tabindex="-1" aria-hidden="true">
+                                            <div class="modal-dialog">
+                                                <div class="modal-content">
+                                                    <div class="modal-header bg-danger text-white">
+                                                        <h5 class="modal-title">Confirmar Exclusão</h5>
+                                                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+                                                    </div>
+                                                    <div class="modal-body">
+                                                        <p>Tem certeza que deseja excluir o registro <strong>"{{ registro.titulo }}"</strong>?</p>
+                                                        <p class="text-danger"><i class="fas fa-exclamation-triangle me-2"></i>Esta ação não pode ser desfeita.</p>
+                                                    </div>
+                                                    <div class="modal-footer">
+                                                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                                                        <form action="{{ url_for('diario.excluir', registro_id=registro.id) }}" method="POST">
+                                                            <button type="submit" class="btn btn-danger">Excluir</button>
+                                                        </form>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+{% else %}
+    <div class="alert alert-info">
+        <i class="fas fa-info-circle me-2"></i>Nenhum registro encontrado no diário de manutenção. Utilize o botão "Nova Entrada" para adicionar o primeiro registro.
+    </div>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,83 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col">
+        <h2 class="border-bottom pb-2">
+            <i class="fas fa-book-open me-2"></i>Visualizar Registro
+        </h2>
+    </div>
+    <div class="col-auto">
+        <a href="{{ url_for('diario.index') }}" class="btn btn-secondary">
+            <i class="fas fa-arrow-left me-1"></i>Voltar
+        </a>
+        
+        {% if current_user.id == registro.user_id or current_user.is_admin() %}
+        <a href="{{ url_for('diario.editar', registro_id=registro.id) }}" class="btn btn-primary">
+            <i class="fas fa-edit me-1"></i>Editar
+        </a>
+        {% endif %}
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-lg-10 mx-auto">
+        <div class="card shadow mb-4">
+            <div class="card-header bg-primary text-white">
+                <h4 class="mb-0">{{ registro.titulo }}</h4>
+            </div>
+            <div class="card-body">
+                <div class="row mb-4">
+                    <div class="col-md-6">
+                        <h6 class="text-muted mb-1">Autor</h6>
+                        <p><i class="fas fa-user me-2"></i>{{ registro.usuario.first_name }} {{ registro.usuario.last_name }}</p>
+                    </div>
+                    <div class="col-md-3">
+                        <h6 class="text-muted mb-1">Data</h6>
+                        <p><i class="fas fa-calendar-alt me-2"></i>{{ registro.data_criacao | format_date }}</p>
+                    </div>
+                    <div class="col-md-3">
+                        <h6 class="text-muted mb-1">Hora</h6>
+                        <p><i class="fas fa-clock me-2"></i>{{ registro.data_criacao.strftime('%H:%M') }}</p>
+                    </div>
+                </div>
+                
+                {% if registro.equipamento %}
+                <div class="row mb-4">
+                    <div class="col-12">
+                        <h6 class="text-muted mb-1">Equipamento Relacionado</h6>
+                        <p>
+                            <i class="fas fa-cogs me-2"></i>
+                            {{ registro.equipamento.identification_number }} - 
+                            {{ registro.equipamento.model }} ({{ registro.equipamento.manufacturer }})
+                        </p>
+                    </div>
+                </div>
+                {% endif %}
+                
+                <div class="row mb-4">
+                    <div class="col-12">
+                        <h5 class="border-bottom pb-2 mb-3">Conteúdo</h5>
+                        <div class="bg-light p-3 rounded">
+                            {{ registro.conteudo | nl2br }}
+                        </div>
+                    </div>
+                </div>
+                
+                {% if registro.arquivo_nome %}
+                <div class="row">
+                    <div class="col-12">
+                        <h5 class="border-bottom pb-2 mb-3">Arquivo Anexado</h5>
+                        <a href="{{ url_for('diario.baixar_arquivo', registro_id=registro.id) }}" 
+                           class="btn btn-outline-primary">
+                            <i class="fas fa-file-download me-2"></i>
+                            Baixar "{{ registro.arquivo_nome }}"
+                        </a>
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

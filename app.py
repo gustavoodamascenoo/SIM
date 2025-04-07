@@ -54,20 +54,29 @@ def format_datetime(value):
         return value.strftime('%Y-%m-%d %H:%M')
     return value
 
+@app.template_filter('nl2br')
+def nl2br(value):
+    """Converte quebras de linha em tags <br>"""
+    if not value:
+        return ""
+    return value.replace('\n', '<br>')
+
 with app.app_context():
     # Import models to ensure they're registered with SQLAlchemy
-    from models import User, Equipment, MaintenancePlan, MaintenanceSchedule, Notification, ChecklistItem, ChecklistTemplate, MaintenanceRecord
+    from models import User, Equipment, MaintenancePlan, MaintenanceSchedule, Notification, ChecklistItem, ChecklistTemplate, MaintenanceRecord, DiarioManutencao
 
     # Import and register blueprints
     from controllers.users import users_bp
     from controllers.equipment import equipment_bp
     from controllers.maintenance import maintenance_bp
     from controllers.reports import reports_bp
+    from controllers.diario import diario_bp
 
     app.register_blueprint(users_bp)
     app.register_blueprint(equipment_bp)
     app.register_blueprint(maintenance_bp)
     app.register_blueprint(reports_bp)
+    app.register_blueprint(diario_bp)
 
     # Create all database tables
     db.create_all()

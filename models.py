@@ -186,3 +186,24 @@ class Notification(db.Model):
     
     def __repr__(self):
         return f'<Notification {self.id} for User {self.user_id}>'
+
+# Modelo para o Diário de Manutenção (Ata)
+class DiarioManutencao(db.Model):
+    __tablename__ = 'diarios_manutencao'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    equipment_id = db.Column(db.Integer, db.ForeignKey('equipment.id'), nullable=True)  # Opcional
+    titulo = db.Column(db.String(200), nullable=False)
+    conteudo = db.Column(db.Text, nullable=False)
+    data_criacao = db.Column(db.DateTime, default=datetime.utcnow)
+    arquivo_nome = db.Column(db.String(255), nullable=True)  # Nome do arquivo anexado
+    arquivo_dados = db.Column(db.LargeBinary, nullable=True)  # Dados do arquivo binário
+    arquivo_tipo = db.Column(db.String(100), nullable=True)   # Tipo MIME do arquivo
+    
+    # Relacionamentos
+    usuario = db.relationship('User', backref='diarios_manutencao', lazy=True)
+    equipamento = db.relationship('Equipment', backref='diarios_manutencao', lazy=True)
+    
+    def __repr__(self):
+        return f'<DiarioManutencao {self.id}: {self.titulo}>'
