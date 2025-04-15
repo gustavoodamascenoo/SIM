@@ -1,10 +1,12 @@
-from flask import Blueprint, render_template, redirect, url_for, flash, request
+from flask import Blueprint, render_template, redirect, url_for, flash, request, jsonify
 from flask_login import login_required, current_user
 from datetime import datetime, timedelta
+from flask_wtf.csrf import CSRFProtect
+csrf = CSRFProtect()
 
 # Garantir que datetime está disponível globalmente
 datetime = datetime
-from app import db
+from app import db, app  
 from models import Equipment, MaintenancePlan, ChecklistTemplate, ChecklistItem
 from models import MaintenanceSchedule, MaintenanceRecord, ChecklistResult, Notification, User
 from forms import MaintenancePlanForm, ChecklistTemplateForm, MaintenanceScheduleForm, MaintenanceRecordForm
@@ -138,9 +140,9 @@ def edit_plan(plan_id):
 @maintenance_bp.route('/plans/<int:plan_id>/delete', methods=['POST'])
 @login_required
 def delete_plan(plan_id):
-    """Delete a maintenance plan"""
+    """Exclui um plano de manutenção"""
     if not current_user.is_admin():
-        flash('Access denied. Only administrators can delete maintenance plans.', 'danger')
+        flash('Acesso negado. Apenas administradores podem excluir planos.', 'danger')
         return redirect(url_for('maintenance.plans'))
     
     plan = MaintenancePlan.query.get_or_404(plan_id)
@@ -148,10 +150,10 @@ def delete_plan(plan_id):
     try:
         db.session.delete(plan)
         db.session.commit()
-        flash(f'Maintenance plan "{plan.name}" has been deleted!', 'success')
+        flash(f'Plano "{plan.name}" excluído com sucesso!', 'success')
     except Exception as e:
         db.session.rollback()
-        flash(f'Error deleting plan: {str(e)}', 'danger')
+        flash(f'Erro ao excluir: {str(e)}', 'danger')
     
     return redirect(url_for('maintenance.plans'))
 
@@ -291,25 +293,27 @@ def edit_checklist(checklist_id):
 @maintenance_bp.route('/checklists/<int:checklist_id>/delete', methods=['POST'])
 @login_required
 def delete_checklist(checklist_id):
-    """Delete a checklist template"""
+    """Exclui um modelo de checklist"""
     if not current_user.is_admin():
-        flash('Access denied. Only administrators can delete checklists.', 'danger')
+        flash('Acesso negado. Apenas administradores podem excluir checklists.', 'danger')
         return redirect(url_for('maintenance.checklists'))
     
     checklist = ChecklistTemplate.query.get_or_404(checklist_id)
     
     try:
-        # Delete all associated items first
+        # Primeiro exclui os itens associados
         ChecklistItem.query.filter_by(template_id=checklist.id).delete()
+        # Depois exclui o checklist
         db.session.delete(checklist)
         db.session.commit()
-        flash(f'Modelo de checklist "{checklist.name}" foi excluído com sucesso!', 'success')
+        flash(f'Checklist "{checklist.name}" excluído com sucesso!', 'success')
     except Exception as e:
         db.session.rollback()
-        flash(f'Error deleting checklist: {str(e)}', 'danger')
+        flash(f'Erro ao excluir: {str(e)}', 'danger')
     
     return redirect(url_for('maintenance.checklists'))
 
+# === Scheduling ===
 # === Scheduling ===
 
 @maintenance_bp.route('/schedule')
@@ -328,56 +332,75 @@ def schedule_list():
     
     return render_template('maintenance/schedule_list.html', schedules=schedules)
 
+
+@maintenance_bp.route('/get_plans/<int:equipment_id>')
+@login_required
+
+@csrf.exempt  # Desativa o CSRF para esta rota específica
+def get_plans(equipment_id):
+    """Rota para obter planos de manutenção por equipamento (AJAX)"""
+    plans = MaintenancePlan.query.filter_by(equipment_id=equipment_id).all()
+    return jsonify([(p.id, p.name) for p in plans])
 @maintenance_bp.route('/schedule/add', methods=['GET', 'POST'])
 @login_required
 def add_schedule():
     """Add a new maintenance schedule"""
     if not (current_user.is_admin() or current_user.is_supervisor()):
-        flash('Access denied. You do not have permission to schedule maintenance.', 'danger')
+        flash('Acesso negado. Você não tem permissão para agendar manutenções.', 'danger')
         return redirect(url_for('maintenance.schedule_list'))
     
     form = MaintenanceScheduleForm()
     form.equipment_id.choices = [(e.id, f"{e.identification_number} - {e.model}") 
-                                for e in Equipment.query.all()]
+                               for e in Equipment.query.all()]
     
-    # Initially the plan choices will be empty - we'll populate via AJAX
-    form.maintenance_plan_id.choices = []
-    
+    # Carrega os planos se já houver um equipamento selecionado (caso de falha na validação)
+    if request.method == 'POST' and form.equipment_id.data:
+        plans = MaintenancePlan.query.filter_by(equipment_id=form.equipment_id.data).all()
+        form.maintenance_plan_id.choices = [(p.id, p.name) for p in plans]
+    else:
+        form.maintenance_plan_id.choices = []
+
     if form.validate_on_submit():
-        schedule = MaintenanceSchedule(
-            equipment_id=form.equipment_id.data,
-            maintenance_plan_id=form.maintenance_plan_id.data,
-            scheduled_date=form.scheduled_date.data,
-            notes=form.notes.data,
-            status='scheduled'
-        )
-        
-        db.session.add(schedule)
-        db.session.commit()
-        
-        # Assign technicians and create notifications
-        equipment = Equipment.query.get(form.equipment_id.data)
-        plan = MaintenancePlan.query.get(form.maintenance_plan_id.data)
-        
-        # Get all technicians
-        technicians = User.query.filter_by(role='technician').all()
-        
-        # Create notification for each technician
-        for tech in technicians:
-            notification = Notification(
-                user_id=tech.id,
-                schedule_id=schedule.id,
-                title='Nova Manutenção Agendada',
-                message=f'Manutenção para {equipment.identification_number} ({equipment.model}) '
-                        f'foi agendada para {form.scheduled_date.data.strftime("%Y-%m-%d %H:%M")}.'
+        try:
+            schedule = MaintenanceSchedule(
+                equipment_id=form.equipment_id.data,
+                maintenance_plan_id=form.maintenance_plan_id.data,
+                scheduled_date=form.scheduled_date.data,
+                notes=form.notes.data,
+                status='scheduled'
             )
-            db.session.add(notification)
-        
-        db.session.commit()
-        flash('Manutenção foi agendada e os técnicos foram notificados!', 'success')
-        return redirect(url_for('maintenance.schedule_list'))
+            
+            db.session.add(schedule)
+            db.session.commit()
+            
+            # Notificar técnicos
+            equipment = Equipment.query.get(form.equipment_id.data)
+            technicians = User.query.filter_by(role='technician').all()
+            
+            for tech in technicians:
+                notification = Notification(
+                    user_id=tech.id,
+                    schedule_id=schedule.id,
+                    title='Nova Manutenção Agendada',
+                    message=f'Manutenção para {equipment.identification_number} ({equipment.model}) '
+                           f'agendada para {form.scheduled_date.data.strftime("%d/%m/%Y %H:%M")}'
+                )
+                db.session.add(notification)
+            
+            db.session.commit()
+            flash('Manutenção agendada com sucesso!', 'success')
+            return redirect(url_for('maintenance.schedule_list'))
+            
+        except Exception as e:
+            db.session.rollback()
+            flash(f'Erro ao agendar manutenção: {str(e)}', 'danger')
+    
+    # Se houver erros de validação, mantém os dados selecionados
+    elif request.method == 'POST':
+        flash('Por favor, corrija os erros no formulário.', 'danger')
     
     return render_template('maintenance/add_schedule.html', form=form)
+
 
 @maintenance_bp.route('/schedule/<int:schedule_id>', methods=['GET'])
 @login_required
@@ -450,7 +473,7 @@ def edit_schedule(schedule_id):
 @maintenance_bp.route('/schedule/<int:schedule_id>/delete', methods=['POST'])
 @login_required
 def delete_schedule(schedule_id):
-    """Delete scheduled maintenance"""
+    """Exclui um agendamento de manutenção"""
     if not current_user.is_admin():
         flash('Acesso negado. Apenas administradores podem excluir agendamentos.', 'danger')
         return redirect(url_for('maintenance.schedule_list'))
@@ -458,15 +481,15 @@ def delete_schedule(schedule_id):
     schedule = MaintenanceSchedule.query.get_or_404(schedule_id)
     
     try:
-        # Delete all notifications for this schedule
+        # Primeiro exclui as notificações relacionadas
         Notification.query.filter_by(schedule_id=schedule.id).delete()
-        
+        # Depois exclui o agendamento
         db.session.delete(schedule)
         db.session.commit()
-        flash('Agendamento de manutenção foi excluído!', 'success')
+        flash('Agendamento excluído com sucesso!', 'success')
     except Exception as e:
         db.session.rollback()
-        flash(f'Erro ao excluir agendamento: {str(e)}', 'danger')
+        flash(f'Erro ao excluir: {str(e)}', 'danger')
     
     return redirect(url_for('maintenance.schedule_list'))
 
@@ -484,142 +507,107 @@ def records():
         ).order_by(MaintenanceRecord.start_time.desc()).all()
     
     return render_template('maintenance/records.html', records=records)
-
 @maintenance_bp.route('/schedule/<int:schedule_id>/perform', methods=['GET', 'POST'])
 @login_required
 def perform_maintenance(schedule_id):
     """Executar manutenção em um item agendado"""
     schedule = MaintenanceSchedule.query.get_or_404(schedule_id)
-    
-    # Verificar se a manutenção já foi concluída
+
     if schedule.status == 'completed':
-        flash('Esta tarefa de manutenção já foi concluída.', 'info')
+        flash('Esta manutenção já foi concluída', 'info')
         return redirect(url_for('maintenance.view_schedule', schedule_id=schedule.id))
-    
-    # Obter o modelo de checklist para este plano de manutenção
-    checklist_template = ChecklistTemplate.query.filter_by(
-        maintenance_plan_id=schedule.maintenance_plan_id
-    ).first()
-    
+
+    # Obtém o modelo de checklist associado ao plano de manutenção
+    checklist_template = ChecklistTemplate.query.filter_by(maintenance_plan_id=schedule.maintenance_plan_id).first()
+
     if not checklist_template:
-        flash('Nenhum modelo de checklist encontrado para este plano de manutenção.', 'warning')
+        flash('Nenhum checklist disponível para este plano', 'warning')
         return redirect(url_for('maintenance.view_schedule', schedule_id=schedule.id))
-    
-    # Obter itens do checklist
-    checklist_items = ChecklistItem.query.filter_by(
-        template_id=checklist_template.id
-    ).order_by(ChecklistItem.order).all()
-    
+
+    # Obtém os itens do checklist associados ao modelo
+    checklist_items = ChecklistItem.query.filter_by(template_id=checklist_template.id).order_by(ChecklistItem.order).all()
+
     form = MaintenanceRecordForm()
     form.equipment_id.data = schedule.equipment_id
     form.schedule_id.data = schedule.id
-    
+
     if request.method == 'GET':
-        from datetime import datetime
         form.start_time.data = datetime.now()
-        form.end_time.data = None
         form.status.data = 'in_progress'
-        
-        # Limpar e adicionar entradas de formulário para cada item do checklist
-        while len(form.checklist_results) > 0:
-            form.checklist_results.pop_entry()
-            
+
+        # Limpa e adiciona itens do checklist ao formulário
+        form.checklist_results.entries = []
         for item in checklist_items:
             form.checklist_results.append_entry({
                 'checklist_item_id': item.id,
-                'status': 'ok',  # Padrão agora é 'ok'
+                'status': 'pendente',
                 'notes': ''
             })
-    
-    if request.method == 'POST' and form.validate():
-        from datetime import datetime
-        # Criar o registro de manutenção
-        record = MaintenanceRecord(
-            equipment_id=form.equipment_id.data,
-            technician_id=current_user.id,
-            schedule_id=form.schedule_id.data,
-            start_time=datetime.now() if not form.start_time.data else form.start_time.data,
-            end_time=form.end_time.data if form.status.data == 'completed' else None,
-            status=form.status.data,
-            notes=form.notes.data,
-            issues_found=form.issues_found.data,
-            actions_taken=form.actions_taken.data
-        )
-        
-        db.session.add(record)
-        db.session.commit()
-        
-        # Adicionar os resultados do checklist com arquivos
-        for item_form in form.checklist_results:
-            # Criar o resultado básico do checklist
-            result = ChecklistResult(
-                maintenance_record_id=record.id,
-                checklist_item_id=item_form.checklist_item_id.data,
-                status=item_form.status.data,
-                notes=item_form.notes.data
-            )
-            
-            # Processar arquivos anexados
-            arquivo = item_form.arquivo.data
-            if arquivo and arquivo.filename:
-                # Lendo os dados do arquivo
-                arquivo_dados = arquivo.read()
-                # Verificando se há conteúdo
-                if arquivo_dados:
-                    result.arquivo_nome = arquivo.filename
-                    result.arquivo_dados = arquivo_dados
-                    result.arquivo_tipo = arquivo.content_type
-            
-            db.session.add(result)
-        
-        # Atualizar o status do agendamento se a manutenção foi concluída
-        if form.status.data == 'completed':
-            schedule.status = 'completed'
-            
-            # Atualizar a data da última manutenção do equipamento
-            equipment = Equipment.query.get(schedule.equipment_id)
-            equipment.last_maintenance_date = form.end_time.data
-            
-            # Criar notificação para o supervisor
-            supervisors = User.query.filter_by(role='supervisor').all()
-            for supervisor in supervisors:
-                notification = Notification(
-                    user_id=supervisor.id,
-                    schedule_id=schedule.id,
-                    title='Manutenção Concluída',
-                    message=f'Manutenção para {equipment.identification_number} ({equipment.model}) foi concluída por {current_user.first_name} {current_user.last_name}.'
-                )
-                db.session.add(notification)
-        
-        db.session.commit()
-        flash('Registro de manutenção foi salvo com sucesso!', 'success')
-        return redirect(url_for('maintenance.records'))
-    
-    from datetime import datetime
-    return render_template(
-        'maintenance/checklist.html', 
-        form=form, 
-        schedule=schedule, 
-        checklist_items=checklist_items,
-        datetime=datetime
-    )
 
+    if form.validate_on_submit():
+        try:
+            # Cria o registro de manutenção principal
+            record = MaintenanceRecord(
+                equipment_id=schedule.equipment_id,
+                schedule_id=schedule.id,
+                start_time=form.start_time.data,
+                end_time=form.end_time.data,
+                status=form.status.data,
+                issues_found=form.issues_found.data,
+                actions_taken=form.actions_taken.data,
+                notes=form.notes.data,
+                technician_id=current_user.id
+            )
+            db.session.add(record)
+            db.session.flush()  # Salva temporariamente para gerar o ID do registro
+
+            # Processa os resultados do checklist
+            for item_form in form.checklist_results.entries:
+                result = ChecklistResult(
+                    maintenance_record_id=record.id,
+                    checklist_item_id=item_form.checklist_item_id.data,
+                    status=item_form.status.data,
+                    notes=item_form.notes.data
+                )
+
+                # Processa arquivo anexado, se existir
+                if item_form.arquivo.data:
+                    file = item_form.arquivo.data
+                    result.arquivo_nome = file.filename
+                    result.arquivo_dados = file.read()
+                    result.arquivo_tipo = file.content_type
+
+                db.session.add(result)
+
+            # Atualiza o status do agendamento, se concluído
+            if form.status.data == 'completed':
+                schedule.status = 'completed'
+                schedule.equipment.last_maintenance_date = datetime.now()
+
+            db.session.commit()
+            flash('Registro de manutenção salvo com sucesso!', 'success')
+            return redirect(url_for('maintenance.records'))
+
+        except Exception as e:
+            db.session.rollback()
+            flash(f'Erro ao salvar registro: {str(e)}', 'danger')
+            app.logger.error(f'Error saving maintenance record: {str(e)}')
+
+    return render_template('maintenance/checklist.html',
+                           form=form,
+                           schedule=schedule,
+                           checklist_items=checklist_items)
+# === view_records ===
 @maintenance_bp.route('/records/<int:record_id>', methods=['GET'])
 @login_required
 def view_record(record_id):
-    """View maintenance record details"""
+    """Visualizar detalhes de um registro de manutenção"""
     record = MaintenanceRecord.query.get_or_404(record_id)
-    
-    # Get checklist results
-    checklist_results = ChecklistResult.query.filter_by(
-        maintenance_record_id=record.id
-    ).all()
-    
-    return render_template(
-        'maintenance/view_record.html', 
-        record=record, 
-        checklist_results=checklist_results
-    )
+    # Obter os resultados do checklist associados ao registro
+    checklist_results = ChecklistResult.query.filter_by(maintenance_record_id=record.id).all()
+    return render_template('maintenance/view_record.html',
+                           record=record,
+                           checklist_results=checklist_results)
 
 # === Notifications ===
 

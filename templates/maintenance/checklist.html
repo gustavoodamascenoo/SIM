@@ -1,5 +1,4 @@
 {% extends "layout.html" %}
-
 {% block content %}
 <div class="row mb-4">
     <div class="col">
@@ -11,22 +10,20 @@
         </div>
     </div>
 </div>
-
 <div class="row">
-    <div class="col-lg-8 mx-auto">
+    <div class="col-lg-10 mx-auto">
         <div class="card shadow mb-4">
             <div class="card-header bg-primary text-white">
-                <h5 class="mb-0"><i class="fas fa-clipboard-check me-2"></i>Checklist de Manutenção</h5>
+                <h5 class="mb-0"><i class="fas fa-tools me-2"></i>Registro de Manutenção</h5>
             </div>
             <div class="card-body">
                 <div class="mb-4">
-                    <h6 class="border-bottom pb-2">Informações do Equipamento</h6>
+                    <h6 class="border-bottom pb-2">Informações do Agendamento</h6>
                     <div class="row">
                         <div class="col-md-6">
                             <dl class="row mb-0">
                                 <dt class="col-sm-5">Equipamento:</dt>
                                 <dd class="col-sm-7">{{ schedule.equipment.identification_number }}</dd>
-
                                 <dt class="col-sm-5">Modelo:</dt>
                                 <dd class="col-sm-7">{{ schedule.equipment.model }}</dd>
                             </dl>
@@ -35,118 +32,138 @@
                             <dl class="row mb-0">
                                 <dt class="col-sm-5">Localização:</dt>
                                 <dd class="col-sm-7">{{ schedule.equipment.location_building }}, Andar {{ schedule.equipment.location_floor }}, {{ schedule.equipment.location_room }}</dd>
-
-                                <dt class="col-sm-5">Agendado:</dt>
+                                <dt class="col-sm-5">Agendado para:</dt>
                                 <dd class="col-sm-7">{{ schedule.scheduled_date|format_datetime }}</dd>
                             </dl>
                         </div>
                     </div>
                 </div>
-
-                <div class="card shadow mb-4">
-                    <div class="card-header bg-primary text-white">
-                        <h5 class="mb-0">Registro de Manutenção</h5>
-                    </div>
-                    <div class="card-body">
                 <form method="POST" action="{{ url_for('maintenance.perform_maintenance', schedule_id=schedule.id) }}" enctype="multipart/form-data">
                     {{ form.hidden_tag() }}
                     {{ form.equipment_id }}
                     {{ form.schedule_id }}
-
                     <div class="row mb-3">
                         <div class="col-md-6">
-                            <label for="{{ form.start_time.id }}" class="form-label">Hora de Início *</label>
+                            <label for="{{ form.start_time.id }}" class="form-label required">Data/Hora de Início</label>
                             {{ form.start_time(class="form-control", type="datetime-local", required=true) }}
                             {% if form.start_time.errors %}
-                                {% for error in form.start_time.errors %}
-                                    <div class="text-danger">{{ error }}</div>
-                                {% endfor %}
+                                <div class="invalid-feedback d-block">
+                                    {% for error in form.start_time.errors %}
+                                        {{ error }}
+                                    {% endfor %}
+                                </div>
                             {% endif %}
                         </div>
                         <div class="col-md-6">
-                            <label for="{{ form.end_time.id }}" class="form-label">Hora de Término</label>
+                            <label for="{{ form.end_time.id }}" class="form-label" id="end_time_label">Data/Hora de Término</label>
                             {{ form.end_time(class="form-control", type="datetime-local") }}
-                            <small class="form-text text-muted">Deixe em branco se a manutenção ainda estiver em andamento</small>
                             {% if form.end_time.errors %}
-                                {% for error in form.end_time.errors %}
-                                    <div class="text-danger">{{ error }}</div>
-                                {% endfor %}
+                                <div class="invalid-feedback d-block">
+                                    {% for error in form.end_time.errors %}
+                                        {{ error }}
+                                    {% endfor %}
+                                </div>
                             {% endif %}
+                            <small class="form-text text-muted">Obrigatório para manutenções concluídas</small>
                         </div>
                     </div>
-
                     <div class="mb-3">
-                        <label for="{{ form.status.id }}" class="form-label">Status *</label>
+                        <label for="{{ form.status.id }}" class="form-label required">Status da Manutenção</label>
                         {{ form.status(class="form-select") }}
                         {% if form.status.errors %}
-                            {% for error in form.status.errors %}
-                                <div class="text-danger">{{ error }}</div>
-                            {% endfor %}
+                            <div class="invalid-feedback d-block">
+                                {% for error in form.status.errors %}
+                                    {{ error }}
+                                {% endfor %}
+                            </div>
                         {% endif %}
                     </div>
-
                     <div class="mb-3">
                         <label for="{{ form.issues_found.id }}" class="form-label">Problemas Encontrados</label>
-                        {{ form.issues_found(class="form-control", rows=3) }}
+                        {{ form.issues_found(class="form-control", rows=3, placeholder="Descreva quaisquer problemas identificados durante a manutenção") }}
                         {% if form.issues_found.errors %}
-                            {% for error in form.issues_found.errors %}
-                                <div class="text-danger">{{ error }}</div>
-                            {% endfor %}
+                            <div class="invalid-feedback d-block">
+                                {% for error in form.issues_found.errors %}
+                                    {{ error }}
+                                {% endfor %}
+                            </div>
                         {% endif %}
                     </div>
-
                     <div class="mb-3">
                         <label for="{{ form.actions_taken.id }}" class="form-label">Ações Realizadas</label>
-                        {{ form.actions_taken(class="form-control", rows=3) }}
+                        {{ form.actions_taken(class="form-control", rows=3, placeholder="Descreva as ações tomadas para resolver os problemas encontrados") }}
                         {% if form.actions_taken.errors %}
-                            {% for error in form.actions_taken.errors %}
-                                <div class="text-danger">{{ error }}</div>
-                            {% endfor %}
+                            <div class="invalid-feedback d-block">
+                                {% for error in form.actions_taken.errors %}
+                                    {{ error }}
+                                {% endfor %}
+                            </div>
                         {% endif %}
                     </div>
-
-                    <div class="mb-3">
+                    <div class="mb-4">
                         <label for="{{ form.notes.id }}" class="form-label">Observações Adicionais</label>
-                        {{ form.notes(class="form-control", rows=2) }}
+                        {{ form.notes(class="form-control", rows=2, placeholder="Adicione quaisquer observações relevantes sobre a manutenção") }}
                         {% if form.notes.errors %}
-                            {% for error in form.notes.errors %}
-                                <div class="text-danger">{{ error }}</div>
-                            {% endfor %}
+                            <div class="invalid-feedback d-block">
+                                {% for error in form.notes.errors %}
+                                    {{ error }}
+                                {% endfor %}
+                            </div>
                         {% endif %}
                     </div>
-
-                    <h6 class="border-bottom pb-2 mt-4">Itens do Checklist</h6>
-
+                    <h5 class="border-bottom pb-2 mb-4"><i class="fas fa-clipboard-check me-2"></i>Checklist de Manutenção</h5>
                     {% if checklist_items %}
+                        <div class="alert alert-info mb-4">
+                            <i class="fas fa-info-circle me-2"></i>Preencha todos os itens obrigatórios do checklist abaixo. Itens marcados como <span class="badge bg-danger">Obrigatório</span> devem ser preenchidos.
+                        </div>
                         <div class="list-group mb-4">
                             {% for item in checklist_items %}
                                 <div class="list-group-item">
-                                    <div class="mb-2">
-                                        <strong>{{ loop.index }}. {{ item.description }}</strong>
+                                    <div class="d-flex justify-content-between align-items-center mb-2">
+                                        <h6 class="mb-0">{{ loop.index }}. {{ item.description }}</h6>
                                         {% if item.is_required %}
-                                            <span class="badge bg-danger ms-1">Obrigatório</span>
+                                            <span class="badge bg-danger">Obrigatório</span>
                                         {% else %}
-                                            <span class="badge bg-secondary ms-1">Opcional</span>
+                                            <span class="badge bg-secondary">Opcional</span>
                                         {% endif %}
                                     </div>
-
-                                    {{ form.checklist_results[loop.index0].checklist_item_id(value=item.id) }}
-
+                                    {{ form.checklist_results[loop.index0].hidden_tag() }}
+                                    {{ form.checklist_results[loop.index0].checklist_item_id }}
                                     <div class="row mb-2">
                                         <div class="col-md-4">
-                                            <label for="{{ form.checklist_results[loop.index0].status.id }}" class="form-label">Status *</label>
+                                            <label for="{{ form.checklist_results[loop.index0].status.id }}" class="form-label required">Status</label>
                                             {{ form.checklist_results[loop.index0].status(class="form-select") }}
+                                            {% if form.checklist_results[loop.index0].status.errors %}
+                                                <div class="invalid-feedback d-block">
+                                                    {% for error in form.checklist_results[loop.index0].status.errors %}
+                                                        {{ error }}
+                                                    {% endfor %}
+                                                </div>
+                                            {% endif %}
                                         </div>
                                         <div class="col-md-8">
                                             <label for="{{ form.checklist_results[loop.index0].notes.id }}" class="form-label">Observações</label>
-                                            {{ form.checklist_results[loop.index0].notes(class="form-control") }}
+                                            {{ form.checklist_results[loop.index0].notes(class="form-control", placeholder="Adicione observações sobre este item") }}
+                                            {% if form.checklist_results[loop.index0].notes.errors %}
+                                                <div class="invalid-feedback d-block">
+                                                    {% for error in form.checklist_results[loop.index0].notes.errors %}
+                                                        {{ error }}
+                                                    {% endfor %}
+                                                </div>
+                                            {% endif %}
                                         </div>
                                     </div>
-
                                     <div class="mb-2">
-                                        <label for="{{ form.checklist_results[loop.index0].arquivo.id }}" class="form-label">Anexar Arquivo (Opcional)</label>
+                                        <label for="{{ form.checklist_results[loop.index0].arquivo.id }}" class="form-label">Anexar Comprovante</label>
                                         {{ form.checklist_results[loop.index0].arquivo(class="form-control") }}
-                                        <div class="form-text">Anexe documentos ou imagens relevantes a este item (máx. 5MB)</div>
+                                        <small class="form-text text-muted">Anexe fotos, documentos ou comprovantes (PDF, JPG, PNG - Máx. 5MB)</small>
+                                        {% if form.checklist_results[loop.index0].arquivo.errors %}
+                                            <div class="invalid-feedback d-block">
+                                                {% for error in form.checklist_results[loop.index0].arquivo.errors %}
+                                                    {{ error }}
+                                                {% endfor %}
+                                            </div>
+                                        {% endif %}
                                     </div>
                                 </div>
                             {% endfor %}
@@ -156,46 +173,17 @@
                             <i class="fas fa-exclamation-triangle me-2"></i>Nenhum item de checklist encontrado para este plano de manutenção.
                         </div>
                     {% endif %}
-
-                    <div class="alert alert-info mb-4">
-                        <i class="fas fa-info-circle me-2"></i>Se você selecionar o status "Concluído", certifique-se de preencher a Hora de Término e completar todos os itens obrigatórios do checklist.
-                    </div>
-
-                    <div class="d-flex justify-content-between">
-                        <a href="{{ url_for('maintenance.view_schedule', schedule_id=schedule.id) }}" class="btn btn-secondary">Cancelar</a>
-                        {{ form.submit(class="btn btn-primary") }}
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-end mt-4">
+                        <a href="{{ url_for('maintenance.view_schedule', schedule_id=schedule.id) }}" class="btn btn-secondary me-md-2">
+                            <i class="fas fa-times me-1"></i>Cancelar
+                        </a>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save me-1"></i>Salvar Registro
+                        </button>
                     </div>
                 </form>
-                    </div>
-                </div>
             </div>
         </div>
     </div>
 </div>
-{% endblock %}
-
-{% block scripts %}
-<script>
-    document.addEventListener('DOMContentLoaded', function() {
-        const statusSelect = document.getElementById('status');
-        const endTimeInput = document.getElementById('end_time');
-
-        // Function to update end time visibility
-        function updateEndTimeRequirement() {
-            if (statusSelect.value === 'completed') {
-                endTimeInput.required = true;
-                endTimeInput.parentElement.classList.add('required');
-            } else {
-                endTimeInput.required = false;
-                endTimeInput.parentElement.classList.remove('required');
-            }
-        }
-
-        // Check initial state
-        updateEndTimeRequirement();
-
-        // Add event listener for status changes
-        statusSelect.addEventListener('change', updateEndTimeRequirement);
-    });
-</script>
 {% endblock %}

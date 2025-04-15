@@ -4,10 +4,10 @@
 <div class="row mb-4">
     <div class="col">
         <div class="d-flex justify-content-between align-items-center">
-            <h2 class="border-bottom pb-2"><i class="fas fa-calendar-alt me-2"></i>Scheduled Maintenance</h2>
+            <h2 class="border-bottom pb-2"><i class="fas fa-calendar-alt me-2"></i>Manutenções Agendadas</h2>
             {% if current_user.is_admin() or current_user.is_supervisor() %}
             <a href="{{ url_for('maintenance.add_schedule') }}" class="btn btn-primary">
-                <i class="fas fa-plus me-2"></i>Schedule New Maintenance
+                <i class="fas fa-plus me-2"></i>Agendar Nova Manutenção
             </a>
             {% endif %}
         </div>
@@ -17,18 +17,18 @@
 {% if schedules %}
 <div class="card shadow mb-4">
     <div class="card-header bg-primary text-white">
-        <h5 class="mb-0"><i class="fas fa-list me-2"></i>Scheduled Maintenance</h5>
+        <h5 class="mb-0"><i class="fas fa-list me-2"></i>Manutenções Agendadas</h5>
     </div>
     <div class="card-body">
         <ul class="nav nav-tabs mb-3" id="scheduleTabs" role="tablist">
             <li class="nav-item" role="presentation">
-                <button class="nav-link active" id="upcoming-tab" data-bs-toggle="tab" data-bs-target="#upcoming" type="button" role="tab" aria-controls="upcoming" aria-selected="true">Upcoming</button>
+                <button class="nav-link active" id="upcoming-tab" data-bs-toggle="tab" data-bs-target="#upcoming" type="button" role="tab" aria-controls="upcoming" aria-selected="true">Próximas</button>
             </li>
             <li class="nav-item" role="presentation">
-                <button class="nav-link" id="completed-tab" data-bs-toggle="tab" data-bs-target="#completed" type="button" role="tab" aria-controls="completed" aria-selected="false">Completed</button>
+                <button class="nav-link" id="completed-tab" data-bs-toggle="tab" data-bs-target="#completed" type="button" role="tab" aria-controls="completed" aria-selected="false">Concluídas</button>
             </li>
             <li class="nav-item" role="presentation">
-                <button class="nav-link" id="all-tab" data-bs-toggle="tab" data-bs-target="#all" type="button" role="tab" aria-controls="all" aria-selected="false">All</button>
+                <button class="nav-link" id="all-tab" data-bs-toggle="tab" data-bs-target="#all" type="button" role="tab" aria-controls="all" aria-selected="false">Todas</button>
             </li>
         </ul>
         
@@ -38,12 +38,12 @@
                     <table class="table table-striped table-hover">
                         <thead>
                             <tr>
-                                <th>Scheduled Date</th>
-                                <th>Equipment</th>
-                                <th>Location</th>
-                                <th>Maintenance Plan</th>
+                                <th>Data Agendada</th>
+                                <th>Equipamento</th>
+                                <th>Localização</th>
+                                <th>Plano de Manutenção</th>
                                 <th>Status</th>
-                                <th>Actions</th>
+                                <th>Ações</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -53,50 +53,51 @@
                                 <tr>
                                     <td>{{ schedule.scheduled_date|format_datetime }}</td>
                                     <td>{{ schedule.equipment.identification_number }} ({{ schedule.equipment.model }})</td>
-                                    <td>{{ schedule.equipment.location_building }}, Floor {{ schedule.equipment.location_floor }}</td>
+                                    <td>{{ schedule.equipment.location_building }}, Andar {{ schedule.equipment.location_floor }}</td>
                                     <td>{{ schedule.maintenance_plan.name }}</td>
                                     <td>
-                                        <span class="badge bg-warning">{{ schedule.status }}</span>
+                                        <span class="badge bg-warning">{{ 'Agendado' if schedule.status == 'scheduled' else schedule.status }}</span>
                                     </td>
                                     <td>
                                         <div class="btn-group" role="group">
-                                            <a href="{{ url_for('maintenance.view_schedule', schedule_id=schedule.id) }}" class="btn btn-sm btn-info" title="View">
+                                            <a href="{{ url_for('maintenance.view_schedule', schedule_id=schedule.id) }}" class="btn btn-sm btn-info" title="Visualizar">
                                                 <i class="fas fa-eye"></i>
                                             </a>
                                             {% if current_user.is_technician() %}
-                                            <a href="{{ url_for('maintenance.perform_maintenance', schedule_id=schedule.id) }}" class="btn btn-sm btn-success" title="Perform Maintenance">
+                                            <a href="{{ url_for('maintenance.perform_maintenance', schedule_id=schedule.id) }}" class="btn btn-sm btn-success" title="Executar Manutenção">
                                                 <i class="fas fa-wrench"></i>
                                             </a>
                                             {% endif %}
                                             {% if current_user.is_admin() or current_user.is_supervisor() %}
-                                            <a href="{{ url_for('maintenance.edit_schedule', schedule_id=schedule.id) }}" class="btn btn-sm btn-warning" title="Edit">
+                                            <a href="{{ url_for('maintenance.edit_schedule', schedule_id=schedule.id) }}" class="btn btn-sm btn-warning" title="Editar">
                                                 <i class="fas fa-edit"></i>
                                             </a>
                                             {% endif %}
                                             {% if current_user.is_admin() %}
-                                            <button type="button" class="btn btn-sm btn-danger" title="Delete" data-bs-toggle="modal" data-bs-target="#deleteModal{{ schedule.id }}">
+                                            <button type="button" class="btn btn-sm btn-danger" title="Excluir" data-bs-toggle="modal" data-bs-target="#deleteModal{{ schedule.id }}">
                                                 <i class="fas fa-trash"></i>
                                             </button>
                                             
-                                            <!-- Delete Modal -->
+                                            <!-- Modal de Exclusão -->
                                             <div class="modal fade" id="deleteModal{{ schedule.id }}" tabindex="-1" aria-labelledby="deleteModalLabel{{ schedule.id }}" aria-hidden="true">
                                                 <div class="modal-dialog">
                                                     <div class="modal-content">
                                                         <div class="modal-header bg-danger text-white">
-                                                            <h5 class="modal-title" id="deleteModalLabel{{ schedule.id }}">Confirm Deletion</h5>
-                                                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                                            <h5 class="modal-title" id="deleteModalLabel{{ schedule.id }}">Confirmar Exclusão</h5>
+                                                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
                                                         </div>
                                                         <div class="modal-body">
-                                                            Are you sure you want to delete this scheduled maintenance?
+                                                            Tem certeza que deseja excluir esta manutenção agendada?
                                                             <br><br>
                                                             <div class="alert alert-warning">
-                                                                <i class="fas fa-exclamation-triangle me-2"></i>This action cannot be undone. All notifications related to this schedule will also be deleted.
+                                                                <i class="fas fa-exclamation-triangle me-2"></i>Esta ação não pode ser desfeita. Todas as notificações relacionadas a este agendamento também serão excluídas.
                                                             </div>
                                                         </div>
                                                         <div class="modal-footer">
-                                                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
                                                             <form action="{{ url_for('maintenance.delete_schedule', schedule_id=schedule.id) }}" method="post">
-                                                                <button type="submit" class="btn btn-danger">Delete</button>
+                                                                <button type="submit" class="btn btn-danger">Excluir</button>
+                                                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                                                             </form>
                                                         </div>
                                                     </div>
@@ -109,7 +110,7 @@
                                 {% endfor %}
                             {% else %}
                                 <tr>
-                                    <td colspan="6" class="text-center">No upcoming scheduled maintenance.</td>
+                                    <td colspan="6" class="text-center">Nenhuma manutenção agendada.</td>
                                 </tr>
                             {% endif %}
                         </tbody>
@@ -122,12 +123,12 @@
                     <table class="table table-striped table-hover">
                         <thead>
                             <tr>
-                                <th>Scheduled Date</th>
-                                <th>Equipment</th>
-                                <th>Location</th>
-                                <th>Maintenance Plan</th>
+                                <th>Data Agendada</th>
+                                <th>Equipamento</th>
+                                <th>Localização</th>
+                                <th>Plano de Manutenção</th>
                                 <th>Status</th>
-                                <th>Actions</th>
+                                <th>Ações</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -137,18 +138,18 @@
                                 <tr>
                                     <td>{{ schedule.scheduled_date|format_datetime }}</td>
                                     <td>{{ schedule.equipment.identification_number }} ({{ schedule.equipment.model }})</td>
-                                    <td>{{ schedule.equipment.location_building }}, Floor {{ schedule.equipment.location_floor }}</td>
+                                    <td>{{ schedule.equipment.location_building }}, Andar {{ schedule.equipment.location_floor }}</td>
                                     <td>{{ schedule.maintenance_plan.name }}</td>
                                     <td>
-                                        <span class="badge bg-success">{{ schedule.status }}</span>
+                                        <span class="badge bg-success">{{ 'Concluído' if schedule.status == 'completed' else schedule.status }}</span>
                                     </td>
                                     <td>
                                         <div class="btn-group" role="group">
-                                            <a href="{{ url_for('maintenance.view_schedule', schedule_id=schedule.id) }}" class="btn btn-sm btn-info" title="View">
+                                            <a href="{{ url_for('maintenance.view_schedule', schedule_id=schedule.id) }}" class="btn btn-sm btn-info" title="Visualizar">
                                                 <i class="fas fa-eye"></i>
                                             </a>
                                             {% if schedule.maintenance_record %}
-                                            <a href="{{ url_for('maintenance.view_record', record_id=schedule.maintenance_record.id) }}" class="btn btn-sm btn-primary" title="View Record">
+                                            <a href="{{ url_for('maintenance.view_record', record_id=schedule.maintenance_record.id) }}" class="btn btn-sm btn-primary" title="Visualizar Registro">
                                                 <i class="fas fa-clipboard-check"></i>
                                             </a>
                                             {% endif %}
@@ -158,7 +159,7 @@
                                 {% endfor %}
                             {% else %}
                                 <tr>
-                                    <td colspan="6" class="text-center">No completed maintenance.</td>
+                                    <td colspan="6" class="text-center">Nenhuma manutenção concluída.</td>
                                 </tr>
                             {% endif %}
                         </tbody>
@@ -171,12 +172,12 @@
                     <table class="table table-striped table-hover">
                         <thead>
                             <tr>
-                                <th>Scheduled Date</th>
-                                <th>Equipment</th>
-                                <th>Location</th>
-                                <th>Maintenance Plan</th>
+                                <th>Data Agendada</th>
+                                <th>Equipamento</th>
+                                <th>Localização</th>
+                                <th>Plano de Manutenção</th>
                                 <th>Status</th>
-                                <th>Actions</th>
+                                <th>Ações</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -184,30 +185,30 @@
                             <tr>
                                 <td>{{ schedule.scheduled_date|format_datetime }}</td>
                                 <td>{{ schedule.equipment.identification_number }} ({{ schedule.equipment.model }})</td>
-                                <td>{{ schedule.equipment.location_building }}, Floor {{ schedule.equipment.location_floor }}</td>
+                                <td>{{ schedule.equipment.location_building }}, Andar {{ schedule.equipment.location_floor }}</td>
                                 <td>{{ schedule.maintenance_plan.name }}</td>
                                 <td>
                                     <span class="badge bg-{{ 'success' if schedule.status == 'completed' else ('warning' if schedule.status == 'scheduled' else 'secondary') }}">
-                                        {{ schedule.status }}
+                                        {{ 'Concluído' if schedule.status == 'completed' else ('Agendado' if schedule.status == 'scheduled' else schedule.status) }}
                                     </span>
                                 </td>
                                 <td>
                                     <div class="btn-group" role="group">
-                                        <a href="{{ url_for('maintenance.view_schedule', schedule_id=schedule.id) }}" class="btn btn-sm btn-info" title="View">
+                                        <a href="{{ url_for('maintenance.view_schedule', schedule_id=schedule.id) }}" class="btn btn-sm btn-info" title="Visualizar">
                                             <i class="fas fa-eye"></i>
                                         </a>
                                         {% if schedule.status == 'scheduled' and current_user.is_technician() %}
-                                        <a href="{{ url_for('maintenance.perform_maintenance', schedule_id=schedule.id) }}" class="btn btn-sm btn-success" title="Perform Maintenance">
+                                        <a href="{{ url_for('maintenance.perform_maintenance', schedule_id=schedule.id) }}" class="btn btn-sm btn-success" title="Executar Manutenção">
                                             <i class="fas fa-wrench"></i>
                                         </a>
                                         {% endif %}
                                         {% if schedule.status == 'scheduled' and (current_user.is_admin() or current_user.is_supervisor()) %}
-                                        <a href="{{ url_for('maintenance.edit_schedule', schedule_id=schedule.id) }}" class="btn btn-sm btn-warning" title="Edit">
+                                        <a href="{{ url_for('maintenance.edit_schedule', schedule_id=schedule.id) }}" class="btn btn-sm btn-warning" title="Editar">
                                             <i class="fas fa-edit"></i>
                                         </a>
                                         {% endif %}
                                         {% if schedule.maintenance_record %}
-                                        <a href="{{ url_for('maintenance.view_record', record_id=schedule.maintenance_record.id) }}" class="btn btn-sm btn-primary" title="View Record">
+                                        <a href="{{ url_for('maintenance.view_record', record_id=schedule.maintenance_record.id) }}" class="btn btn-sm btn-primary" title="Visualizar Registro">
                                             <i class="fas fa-clipboard-check"></i>
                                         </a>
                                         {% endif %}
@@ -224,9 +225,9 @@
 </div>
 {% else %}
 <div class="alert alert-info" role="alert">
-    <i class="fas fa-info-circle me-2"></i>No maintenance schedules found.
+    <i class="fas fa-info-circle me-2"></i>Nenhuma manutenção agendada encontrada.
     {% if current_user.is_admin() or current_user.is_supervisor() %}
-    <a href="{{ url_for('maintenance.add_schedule') }}" class="alert-link">Schedule your first maintenance</a>.
+    <a href="{{ url_for('maintenance.add_schedule') }}" class="alert-link">Agende sua primeira manutenção</a>.
     {% endif %}
 </div>
 {% endif %}

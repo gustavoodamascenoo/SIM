@@ -3,7 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sistema de Manutenção de AC</title>
+    <meta name="csrf-token" content="{{ csrf_token() }}">
+    <title>SIM - Sistema Integrado de Manutenção</title>
     <!-- Bootstrap CSS (Replit Dark Theme) -->
     <link rel="stylesheet" href="https://cdn.replit.com/agent/bootstrap-agent-dark-theme.min.css">
     <!-- Font Awesome for icons -->
@@ -16,7 +17,7 @@
     <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
         <div class="container">
             <a class="navbar-brand" href="{{ url_for('maintenance.dashboard') if current_user.is_authenticated else url_for('users.login') }}">
-                <i class="fas fa-snowflake me-2"></i>Sistema de Manutenção de AC
+                <i class="fas fa-snowflake me-2"></i> SIM - Sistema Integrado de Manutenção
             </a>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
                 <span class="navbar-toggler-icon"></span>
@@ -57,8 +58,6 @@
                     {% endif %}
                     <li class="nav-item">
                         <a class="nav-link" href="{{ url_for('diario.index') }}">Diário de Manutenção</a>
-                    </li>
-                    <li class="nav-item">
                     </li>
                     {% if current_user.is_admin() %}
                     <li class="nav-item">
@@ -138,7 +137,7 @@
     <!-- Footer -->
     <footer class="footer mt-auto py-3 bg-dark">
         <div class="container text-center">
-            <span class="text-muted">Sistema de Manutenção de AC &copy; 2025</span>
+            <span class="text-muted">DEMAP.SIM - Sistema Integrado de Manutenção  &copy; 2025</span>
         </div>
     </footer>
 
@@ -148,6 +147,40 @@
     <script src="{{ url_for('static', filename='js/main.js') }}"></script>
     <!-- Chart.js for data visualization -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <!-- CSRF Token Configuration for AJAX -->
+    <script>
+        // Configuração global do CSRF Token para requisições AJAX
+        document.addEventListener('DOMContentLoaded', function() {
+            const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+            
+            // Configuração para fetch API
+            if (window.fetch) {
+                const originalFetch = window.fetch;
+                window.fetch = function(url, options = {}) {
+                    if (!options.headers) {
+                        options.headers = {};
+                    }
+                    if (!/^(GET|HEAD|OPTIONS|TRACE)$/i.test(options.method || 'GET')) {
+                        options.headers['X-CSRFToken'] = csrfToken;
+                    }
+                    return originalFetch(url, options);
+                };
+            }
+            
+            // Configuração para jQuery (se estiver usando)
+            if (window.jQuery) {
+                $.ajaxSetup({
+                    beforeSend: function(xhr, settings) {
+                        if (!/^(GET|HEAD|OPTIONS|TRACE)$/i.test(settings.type)) {
+                            xhr.setRequestHeader("X-CSRFToken", csrfToken);
+                        }
+                    }
+                });
+            }
+        });
+    </script>
+    
     {% block scripts %}{% endblock %}
 </body>
 </html>

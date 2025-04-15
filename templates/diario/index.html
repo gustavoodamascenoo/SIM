@@ -82,7 +82,7 @@
                                             {% endif %}
                                         </div>
                                         
-                                        <!-- Modal de Confirmação para Exclusão -->
+                                        <!-- Modal de Confirmação para Exclusão - Versão Corrigida -->
                                         <div class="modal fade" id="deleteModal{{ registro.id }}" tabindex="-1" aria-hidden="true">
                                             <div class="modal-dialog">
                                                 <div class="modal-content">
@@ -97,7 +97,10 @@
                                                     <div class="modal-footer">
                                                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
                                                         <form action="{{ url_for('diario.excluir', registro_id=registro.id) }}" method="POST">
-                                                            <button type="submit" class="btn btn-danger">Excluir</button>
+                                                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                                            <button type="submit" class="btn btn-danger">
+                                                                <i class="fas fa-trash me-1"></i> Confirmar Exclusão
+                                                            </button>
                                                         </form>
                                                     </div>
                                                 </div>

@@ -6,9 +6,10 @@ from flask import Flask, session, g
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.orm import DeclarativeBase
 from flask_login import LoginManager, current_user
+from flask_wtf.csrf import CSRFProtect  # Import CSRFProtect
 
 # Configure logging
-logging.basicConfig(level=logging.DEBUG)
+logging.basicConfig(level=logging.INFO)  # Alterado para INFO em produção
 logger = logging.getLogger(__name__)
 
 class Base(DeclarativeBase):
@@ -17,20 +18,29 @@ class Base(DeclarativeBase):
 # Initialize extensions
 db = SQLAlchemy(model_class=Base)
 login_manager = LoginManager()
+csrf = CSRFProtect()  # Inicializa CSRFProtect
 
 # Create the app
 app = Flask(__name__)
 app.config["SQLALCHEMY_DATABASE_URI"] = os.environ.get("DATABASE_URL", "sqlite:///ac_maintenance.db")
-app.secret_key = os.environ.get("SESSION_SECRET", "dev_secret_key")
+app.config["SECRET_KEY"] = os.environ.get("SESSION_SECRET", os.urandom(24).hex())  # Gera uma chave segura
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 app.config["SQLALCHEMY_ENGINE_OPTIONS"] = {
     "pool_recycle": 300,
     "pool_pre_ping": True,
 }
 
+# Desativa totalmente o CSRF (temporariamente)
+app.config["WTF_CSRF_ENABLED"] = True  # DESATIVA O CSRF GLOBALMENTE
+app.config["WTF_CSRF_CHECK_DEFAULT"] = True  # DESATIVA A VERIFICAÇÃO PADRÃO DE CSRF
+# Para reativar o CSRF no futuro:
+# - Altere "WTF_CSRF_ENABLED" para True
+# - Remova ou comente "WTF_CSRF_CHECK_DEFAULT"
+
 # Initialize extensions with app
 db.init_app(app)
 login_manager.init_app(app)
+csrf.init_app(app)  # Inicializa CSRFProtect (não será usado enquanto CSRF estiver desativado)
 login_manager.login_view = 'users.login'
 login_manager.login_message_category = 'info'
 
@@ -72,11 +82,11 @@ with app.app_context():
     from controllers.reports import reports_bp
     from controllers.diario import diario_bp
 
-    app.register_blueprint(users_bp)
-    app.register_blueprint(equipment_bp)
-    app.register_blueprint(maintenance_bp)
-    app.register_blueprint(reports_bp)
-    app.register_blueprint(diario_bp)
+    app.register_blueprint(users_bp, url_prefix='/users')  # Adiciona prefixos explícitos
+    app.register_blueprint(equipment_bp, url_prefix='/equipment')
+    app.register_blueprint(maintenance_bp, url_prefix='/maintenance')
+    app.register_blueprint(reports_bp, url_prefix='/reports')
+    app.register_blueprint(diario_bp, url_prefix='/diario')
 
     # Create all database tables
     db.create_all()

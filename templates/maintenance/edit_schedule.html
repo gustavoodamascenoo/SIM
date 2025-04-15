@@ -3,22 +3,25 @@
 {% block content %}
 <div class="row mb-4">
     <div class="col">
-        <h2 class="border-bottom pb-2"><i class="fas fa-edit me-2"></i>Edit Scheduled Maintenance</h2>
+        <!-- Título da página -->
+        <h2 class="border-bottom pb-2"><i class="fas fa-edit me-2"></i>Editar Manutenção Agendada</h2>
     </div>
 </div>
 
 <div class="row">
     <div class="col-lg-8 mx-auto">
         <div class="card shadow">
+            <!-- Cabeçalho do formulário -->
             <div class="card-header bg-warning text-dark">
-                <h5 class="mb-0"><i class="fas fa-calendar-alt me-2"></i>Maintenance Schedule Details</h5>
+                <h5 class="mb-0"><i class="fas fa-calendar-alt me-2"></i>Detalhes do Agendamento de Manutenção</h5>
             </div>
             <div class="card-body">
+                <!-- Formulário para editar manutenção agendada -->
                 <form method="POST" action="{{ url_for('maintenance.edit_schedule', schedule_id=schedule.id) }}">
                     {{ form.hidden_tag() }}
                     
                     <div class="mb-3">
-                        <label for="{{ form.equipment_id.id }}" class="form-label">Equipment *</label>
+                        <label for="{{ form.equipment_id.id }}" class="form-label">Equipamento *</label>
                         {{ form.equipment_id(class="form-select", id="equipment-select") }}
                         {% if form.equipment_id.errors %}
                             {% for error in form.equipment_id.errors %}
@@ -28,7 +31,7 @@
                     </div>
                     
                     <div class="mb-3">
-                        <label for="{{ form.maintenance_plan_id.id }}" class="form-label">Maintenance Plan *</label>
+                        <label for="{{ form.maintenance_plan_id.id }}" class="form-label">Plano de Manutenção *</label>
                         {{ form.maintenance_plan_id(class="form-select", id="plan-select") }}
                         {% if form.maintenance_plan_id.errors %}
                             {% for error in form.maintenance_plan_id.errors %}
@@ -38,7 +41,7 @@
                     </div>
                     
                     <div class="mb-3">
-                        <label for="{{ form.scheduled_date.id }}" class="form-label">Scheduled Date and Time *</label>
+                        <label for="{{ form.scheduled_date.id }}" class="form-label">Data e Hora Agendadas *</label>
                         {{ form.scheduled_date(class="form-control", type="datetime-local") }}
                         {% if form.scheduled_date.errors %}
                             {% for error in form.scheduled_date.errors %}
@@ -48,7 +51,7 @@
                     </div>
                     
                     <div class="mb-3">
-                        <label for="{{ form.notes.id }}" class="form-label">Notes</label>
+                        <label for="{{ form.notes.id }}" class="form-label">Observações</label>
                         {{ form.notes(class="form-control", rows=3) }}
                         {% if form.notes.errors %}
                             {% for error in form.notes.errors %}
@@ -58,12 +61,12 @@
                     </div>
                     
                     <div class="alert alert-info mb-4">
-                        <i class="fas fa-info-circle me-2"></i>All technicians will be notified of this schedule update.
+                        <i class="fas fa-info-circle me-2"></i>Todos os técnicos serão notificados sobre esta atualização de agendamento.
                     </div>
                     
                     <div class="d-flex justify-content-between">
-                        <a href="{{ url_for('maintenance.schedule_list') }}" class="btn btn-secondary">Cancel</a>
-                        {{ form.submit(class="btn btn-warning") }}
+                        <a href="{{ url_for('maintenance.schedule_list') }}" class="btn btn-secondary">Cancelar</a>
+                        {{ form.submit(class="btn btn-warning", value="Salvar Alterações") }}
                     </div>
                 </form>
             </div>
@@ -78,15 +81,15 @@
         const equipmentSelect = document.getElementById('equipment-select');
         const planSelect = document.getElementById('plan-select');
         
-        // Object to store maintenance plans by equipment ID
+        // Objeto para armazenar planos de manutenção por ID de equipamento
         const maintenancePlansByEquipment = {};
         
-        // Function to update maintenance plan options based on selected equipment
+        // Função para atualizar as opções de plano de manutenção com base no equipamento selecionado
         function updateMaintenancePlans() {
-            // Get current selected plan if any
+            // Obter o plano selecionado atual, se houver
             const currentPlanId = planSelect.value;
             
-            // Clear existing options
+            // Limpar opções existentes
             planSelect.innerHTML = '';
             
             const equipmentId = equipmentSelect.value;
@@ -94,13 +97,13 @@
             if (equipmentId && maintenancePlansByEquipment[equipmentId]) {
                 const plans = maintenancePlansByEquipment[equipmentId];
                 
-                // Add options for each plan
+                // Adicionar opções para cada plano
                 plans.forEach(plan => {
                     const option = document.createElement('option');
                     option.value = plan.id;
                     option.textContent = plan.name;
                     
-                    // Select this option if it matches the current plan
+                    // Selecionar esta opção se corresponder ao plano atual
                     if (plan.id.toString() === currentPlanId) {
                         option.selected = true;
                     }
@@ -114,14 +117,14 @@
             }
         }
         
-        // Fetch maintenance plans when equipment selection changes
+        // Buscar planos de manutenção quando a seleção de equipamento mudar
         equipmentSelect.addEventListener('change', function() {
             const equipmentId = this.value;
             
             if (equipmentId) {
-                // Check if we already have this data
+                // Verificar se já temos esses dados
                 if (!maintenancePlansByEquipment[equipmentId]) {
-                    // Fetch maintenance plans for this equipment
+                    // Buscar planos de manutenção para este equipamento
                     fetch(`/api/equipment/${equipmentId}/maintenance_plans`)
                         .then(response => response.json())
                         .then(data => {
@@ -129,11 +132,11 @@
                             updateMaintenancePlans();
                         })
                         .catch(error => {
-                            console.error('Error fetching maintenance plans:', error);
+                            console.error('Erro ao buscar planos de manutenção:', error);
                             planSelect.disabled = true;
                         });
                 } else {
-                    // Use cached data
+                    // Usar dados em cache
                     updateMaintenancePlans();
                 }
             } else {
@@ -142,17 +145,17 @@
             }
         });
         
-        // Initialize plans for current equipment
+        // Inicializar planos para o equipamento atual
         const initialEquipmentId = equipmentSelect.value;
         if (initialEquipmentId) {
-            // Pre-populate the plans for the current equipment
+            // Pré-carregar os planos para o equipamento atual
             fetch(`/api/equipment/${initialEquipmentId}/maintenance_plans`)
                 .then(response => response.json())
                 .then(data => {
                     maintenancePlansByEquipment[initialEquipmentId] = data;
                 })
                 .catch(error => {
-                    console.error('Error fetching initial maintenance plans:', error);
+                    console.error('Erro ao buscar planos de manutenção iniciais:', error);
                 });
         }
     });

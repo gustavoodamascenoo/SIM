@@ -3,7 +3,8 @@
 {% block content %}
 <div class="row mb-4">
     <div class="col">
-        <h2 class="border-bottom pb-2"><i class="fas fa-chart-line me-2"></i>Reports & Analytics</h2>
+        <!-- Título da página -->
+        <h2 class="border-bottom pb-2"><i class="fas fa-chart-line me-2"></i>Relatórios e Análises</h2>
     </div>
 </div>
 
@@ -11,18 +12,18 @@
     <div class="col-md-4 mb-4">
         <div class="card shadow h-100">
             <div class="card-header bg-primary text-white">
-                <h5 class="mb-0"><i class="fas fa-history me-2"></i>Maintenance History</h5>
+                <h5 class="mb-0"><i class="fas fa-history me-2"></i>Histórico de Manutenção</h5>
             </div>
             <div class="card-body">
-                <p>View and analyze maintenance history for all equipment. Filter by date, equipment, technician, and status.</p>
+                <p>Visualize e analise o histórico de manutenção de todos os equipamentos. Filtre por data, equipamento, técnico e status.</p>
                 <ul class="list-unstyled">
-                    <li><i class="fas fa-check-circle me-2 text-success"></i>Completed maintenance tasks</li>
-                    <li><i class="fas fa-spinner me-2 text-warning"></i>In-progress maintenance</li>
-                    <li><i class="fas fa-calendar-day me-2 text-info"></i>Time period analysis</li>
+                    <li><i class="fas fa-check-circle me-2 text-success"></i>Tarefas de manutenção concluídas</li>
+                    <li><i class="fas fa-spinner me-2 text-warning"></i>Manutenções em andamento</li>
+                    <li><i class="fas fa-calendar-day me-2 text-info"></i>Análise por período de tempo</li>
                 </ul>
             </div>
             <div class="card-footer">
-                <a href="{{ url_for('reports.maintenance_history') }}" class="btn btn-primary btn-sm w-100">View Report</a>
+                <a href="{{ url_for('reports.maintenance_history') }}" class="btn btn-primary btn-sm w-100">Ver Relatório</a>
             </div>
         </div>
     </div>
@@ -30,18 +31,18 @@
     <div class="col-md-4 mb-4">
         <div class="card shadow h-100">
             <div class="card-header bg-success text-white">
-                <h5 class="mb-0"><i class="fas fa-snowflake me-2"></i>Equipment Status</h5>
+                <h5 class="mb-0"><i class="fas fa-snowflake me-2"></i>Status dos Equipamentos</h5>
             </div>
             <div class="card-body">
-                <p>Overview of all equipment status, including active/inactive equipment and maintenance needs.</p>
+                <p>Visão geral do status de todos os equipamentos, incluindo equipamentos ativos/inativos e necessidades de manutenção.</p>
                 <ul class="list-unstyled">
-                    <li><i class="fas fa-check-circle me-2 text-success"></i>Active equipment</li>
-                    <li><i class="fas fa-exclamation-triangle me-2 text-warning"></i>Equipment needing maintenance</li>
-                    <li><i class="fas fa-clock me-2 text-info"></i>Last maintenance dates</li>
+                    <li><i class="fas fa-check-circle me-2 text-success"></i>Equipamentos ativos</li>
+                    <li><i class="fas fa-exclamation-triangle me-2 text-warning"></i>Equipamentos que precisam de manutenção</li>
+                    <li><i class="fas fa-clock me-2 text-info"></i>Datas da última manutenção</li>
                 </ul>
             </div>
             <div class="card-footer">
-                <a href="{{ url_for('reports.equipment_status') }}" class="btn btn-success btn-sm w-100">View Report</a>
+                <a href="{{ url_for('reports.equipment_status') }}" class="btn btn-success btn-sm w-100">Ver Relatório</a>
             </div>
         </div>
     </div>
@@ -49,18 +50,18 @@
     <div class="col-md-4 mb-4">
         <div class="card shadow h-100">
             <div class="card-header bg-info text-white">
-                <h5 class="mb-0"><i class="fas fa-users me-2"></i>Technician Performance</h5>
+                <h5 class="mb-0"><i class="fas fa-users me-2"></i>Desempenho dos Técnicos</h5>
             </div>
             <div class="card-body">
-                <p>Analyze technician performance metrics including completed maintenance tasks and efficiency.</p>
+                <p>Análise de métricas de desempenho dos técnicos, incluindo tarefas de manutenção concluídas e eficiência.</p>
                 <ul class="list-unstyled">
-                    <li><i class="fas fa-tasks me-2 text-success"></i>Completed maintenance counts</li>
-                    <li><i class="fas fa-clock me-2 text-warning"></i>Average maintenance duration</li>
-                    <li><i class="fas fa-exclamation-circle me-2 text-danger"></i>Issues identified</li>
+                    <li><i class="fas fa-tasks me-2 text-success"></i>Contagem de manutenções concluídas</li>
+                    <li><i class="fas fa-clock me-2 text-warning"></i>Duração média de manutenção</li>
+                    <li><i class="fas fa-exclamation-circle me-2 text-danger"></i>Problemas identificados</li>
                 </ul>
             </div>
             <div class="card-footer">
-                <a href="{{ url_for('reports.technician_performance') }}" class="btn btn-info btn-sm w-100">View Report</a>
+                <a href="{{ url_for('reports.technician_performance') }}" class="btn btn-info btn-sm w-100">Ver Relatório</a>
             </div>
         </div>
     </div>
@@ -70,19 +71,19 @@
     <div class="col-md-6 mb-4">
         <div class="card shadow h-100">
             <div class="card-header bg-warning text-dark">
-                <h5 class="mb-0"><i class="fas fa-chart-pie me-2"></i>Data Visualization</h5>
+                <h5 class="mb-0"><i class="fas fa-chart-pie me-2"></i>Visualização de Dados</h5>
             </div>
             <div class="card-body">
-                <p>Visual representation of maintenance data with interactive charts and graphs in a BI-style dashboard.</p>
+                <p>Representação visual dos dados de manutenção com gráficos e tabelas interativas em um painel no estilo BI.</p>
                 <ul class="list-unstyled">
-                    <li><i class="fas fa-chart-bar me-2 text-primary"></i>Equipment status distribution</li>
-                    <li><i class="fas fa-chart-line me-2 text-success"></i>Maintenance timeline</li>
-                    <li><i class="fas fa-chart-pie me-2 text-info"></i>Manufacturer distribution</li>
-                    <li><i class="fas fa-chart-bar me-2 text-warning"></i>Technician performance comparisons</li>
+                    <li><i class="fas fa-chart-bar me-2 text-primary"></i>Distribuição do status dos equipamentos</li>
+                    <li><i class="fas fa-chart-line me-2 text-success"></i>Linha do tempo de manutenção</li>
+                    <li><i class="fas fa-chart-pie me-2 text-info"></i>Distribuição por fabricante</li>
+                    <li><i class="fas fa-chart-bar me-2 text-warning"></i>Comparação de desempenho dos técnicos</li>
                 </ul>
             </div>
             <div class="card-footer">
-                <a href="{{ url_for('reports.data_visualization') }}" class="btn btn-warning btn-sm w-100">View Visualizations</a>
+                <a href="{{ url_for('reports.data_visualization') }}" class="btn btn-warning btn-sm w-100">Ver Visualizações</a>
             </div>
         </div>
     </div>
@@ -90,19 +91,19 @@
     <div class="col-md-6 mb-4">
         <div class="card shadow h-100">
             <div class="card-header bg-danger text-white">
-                <h5 class="mb-0"><i class="fas fa-file-csv me-2"></i>Export Data</h5>
+                <h5 class="mb-0"><i class="fas fa-file-csv me-2"></i>Exportar Dados</h5>
             </div>
             <div class="card-body">
-                <p>Export maintenance and equipment data to CSV format for further analysis or archiving.</p>
+                <p>Exporte dados de manutenção e equipamentos no formato CSV para análise adicional ou arquivamento.</p>
                 <ul class="list-unstyled">
-                    <li><i class="fas fa-history me-2 text-primary"></i>Maintenance history exports</li>
-                    <li><i class="fas fa-snowflake me-2 text-success"></i>Equipment status exports</li>
-                    <li><i class="fas fa-users me-2 text-info"></i>Technician performance exports</li>
-                    <li><i class="fas fa-calendar-alt me-2 text-warning"></i>Custom date range selection</li>
+                    <li><i class="fas fa-history me-2 text-primary"></i>Exportações de histórico de manutenção</li>
+                    <li><i class="fas fa-snowflake me-2 text-success"></i>Exportações de status dos equipamentos</li>
+                    <li><i class="fas fa-users me-2 text-info"></i>Exportações de desempenho dos técnicos</li>
+                    <li><i class="fas fa-calendar-alt me-2 text-warning"></i>Seleção de intervalo de datas personalizado</li>
                 </ul>
             </div>
             <div class="card-footer">
-                <a href="{{ url_for('reports.export') }}" class="btn btn-danger btn-sm w-100">Export Data</a>
+                <a href="{{ url_for('reports.export') }}" class="btn btn-danger btn-sm w-100">Exportar Dados</a>
             </div>
         </div>
     </div>
